@@ -319,11 +319,11 @@ void saveSettings()
 
 struct MyStrddawuct
 {
-    float saldo = 100000.f;  +
-    float totalSaldo = 100000.f; - 
+    float saldo = 100000.f;
+    float totalSaldo = 100000.f;
 
-    int score = 0;  - 
-    int bestScore = 0; +
+    int score = 0;
+    int bestScore = 0;
 
     struct frefwefweqf
     {
@@ -355,8 +355,7 @@ void updateSettings()
 
             settingsFile >> programing_mode;
 
-            settingsFile >> user.bestScore;
-            settingsFile >> user.saldo;
+            settingsFile >> bestScore;
 
             if (styleColor == 0)
             {
