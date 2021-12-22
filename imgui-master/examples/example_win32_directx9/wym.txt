@@ -1,0 +1,67 @@
+Potrzebujê:
+
+ 
+
+o   Przy ka¿dej walucie pole do wpisania „alert level”  -  w %    
+
+o   i jeœli dzienna (albo z kilku godzin – nie wiem, jak siê da) zmiana kursu przekroczy „alert level” to  linijka robi siê na czerwono,
+
+Chodzi o to, ze Bitcoin zmienia siê  ci¹gu dnia o 5-10% i to ju¿ jest sensacja. Ale s¹ waluty, które szybko rosn¹ i szybka spadaj¹ – ale o np. 100%. 
+
+ 
+
+ 
+
+ 
+
+I symulator kupowania, Potrzebujê:
+
+o   pole „BUY”  i   przechodzi do okna transakcyjnego   i wpisujê ile chcê kupiæ,  z aktualnego kursu przelicza  - i pokazuje mi ile wyda³am USD
+
+o   i  panel „my crypto”  - jak wchodzê, to widzê:
+
+o   ile jakich walut mam
+
+o   kurs zakupu
+
+o   obecny kurs
+
+o   pole „potential profit”  tj. przeliczenie, jakbym teraz sprzeda³a (tj. po jakim kursie kupione i po obecnym kursie sprzedane)  to ile zarobiê / stracê  - w USD i w  %
+
+o   pole SELL
+
+o   i w SELL – mogê wybraæ ile chcê sprzedaæ (bo niekoniecznie chcê sprzedaæ wszystko )
+
+o   i wtedy jak sprzedajê to mi liczy – ile mam zysku / straty w USD
+
+o   i jakaœ historia wszystkich transakcji – ¿eby zobaczyæ jak to sz³o i na czym ile zarobi³am / sprzeda³am:  
+
+§  crypto / 
+
+§  iloœæ  /
+
+§  data /
+
+§  kurs zakupu, 
+
+§   data/
+
+§  kurs sprzeda¿y/
+
+§  wartoœæ transakcji w  USD /
+
+§  profit w  USD /
+
+§  profit  w  %
+
+o   i podsumowanie – ile od pocz¹tku zysku w  USD  i w  % :  
+
+§  Total transaction volume /
+
+§   profit USD /
+
+§  profit %
+
+tyle na razie ;))
+
+...

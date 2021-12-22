@@ -1,0 +1,15 @@
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\bin\Release\netcoreapp3.1\data_scraper.exe
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\bin\Release\netcoreapp3.1\data_scraper.deps.json
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\bin\Release\netcoreapp3.1\data_scraper.runtimeconfig.json
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\bin\Release\netcoreapp3.1\data_scraper.runtimeconfig.dev.json
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\bin\Release\netcoreapp3.1\data_scraper.dll
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\bin\Release\netcoreapp3.1\data_scraper.pdb
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\bin\Release\netcoreapp3.1\HtmlAgilityPack.dll
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\obj\Release\netcoreapp3.1\data_scraper.csproj.CoreCompileInputs.cache
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\obj\Release\netcoreapp3.1\data_scraper.AssemblyInfoInputs.cache
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\obj\Release\netcoreapp3.1\data_scraper.AssemblyInfo.cs
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\obj\Release\netcoreapp3.1\data_scraper.csproj.CopyComplete
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\obj\Release\netcoreapp3.1\data_scraper.dll
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\obj\Release\netcoreapp3.1\data_scraper.pdb
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\obj\Release\netcoreapp3.1\data_scraper.genruntimeconfig.cache
+C:\Users\mati\Desktop\CryptoApp\data-scraper\data_scraper\data_scraper\obj\Release\netcoreapp3.1\data_scraper.csprojAssemblyReference.cache

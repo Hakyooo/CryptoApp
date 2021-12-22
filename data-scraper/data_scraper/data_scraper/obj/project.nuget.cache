@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "8OGVNTUWzOirKIauMfL1/5CoVPaOJHBh4E56ko9P7DDKQ6RL4hiI5L9pogH+d1RyyYn1+SiEmUurMvR0JwW94Q==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\mati\\Desktop\\CryptoApp\\data-scraper\\data_scraper\\data_scraper\\data_scraper.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\mati\\.nuget\\packages\\htmlagilitypack\\1.11.39\\htmlagilitypack.1.11.39.nupkg.sha512"
+  ],
+  "logs": []
+}
