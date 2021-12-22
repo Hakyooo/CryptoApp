@@ -18,6 +18,7 @@
 #define BUFSIZE 1024
 
 using namespace std;
+using namespace ImGui;
 using namespace chrono;
 using namespace this_thread;
 using namespace literals::chrono_literals;
@@ -66,8 +67,6 @@ static char cryptoDescription[128]; // InputText
 static char cryptoSymbol[128]; // InputText     
 static char cryptoPrice[128]; // auto-fill
 
-static char cryptoAlertLevel[128]; // auto-fill     
-
 static int  cryptoBlockchainTmp[999]; // Blockchain temp table 
 static char cryptoBaseDescription[999][128];
 static char cryptoBaseSymbol[999][128];
@@ -81,16 +80,18 @@ static bool blockchainWin = false;
 static char addNewBlockchain[128];
 
 static bool programing_mode = true; //
+
 static bool colorTool = true; // CollapsingHeader / progrming_mode
 
 static bool alertLevel = true;
+static char cryptoAlertLevel[128]; // auto-fill
 
 static int autoSaveTime = 0;
 
 static int totalSaldo = 0;
 static int bestScore = 0;
 
-string data_scraper_loc = "";
+string dataScraperLoc = "";
 
 static char addAmount[128];
 static char sellAmount[128];
@@ -108,18 +109,18 @@ static void showErrorWindow()
 {
     if (errorVisible)
     {
-        ImGui::Begin(" ", &errorVisible);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+        Begin(" ", &errorVisible);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
         {
-            ImGui::Text(errorReason);
+            Text(errorReason);
         }
-        ImGui::End();
+        End();
     }
 }
 
 const char* commandText = NULL;
 void system_command(const char* text) { system(commandText = text); }
 
-static void print(string text) { std::cout << text << std::endl; }
+static void print(string text) { cout << text << endl; }
 
 template <typename type> type rev(type value)
 {
@@ -189,6 +190,77 @@ struct MyStrddawuct
 
 }user;
 
+void saveSettings()
+{
+    ofstream settingsFile(tempCrypto + "settings.txt");
+    {
+        if (!settingsFile.fail()) // Success
+        {
+            settingsFile << styleColor << endl;
+            settingsFile << currency << endl;
+            settingsFile << language << endl;
+
+            settingsFile << autoRefresh << endl;
+            settingsFile << autoRefreshTime << endl;
+
+            settingsFile << edit << endl;
+            settingsFile << showFps << endl;
+
+            settingsFile << showLastRerfresh << endl;
+            settingsFile << showAutoRerfresh << endl;
+
+            settingsFile << autoSaveDelay << endl;
+
+            settingsFile << programing_mode << endl;
+
+            settingsFile << user.bestScore << endl;
+            settingsFile << user.saldo << endl;
+        }
+    }
+    settingsFile.close();
+}
+void updateSettings()
+{
+    ifstream settingsFile(tempCrypto + "settings.txt");
+    {
+        if (!settingsFile.fail()) // Success
+        {
+            settingsFile >> styleColor;
+            settingsFile >> currency;
+            settingsFile >> language;
+
+            settingsFile >> autoRefresh;
+            settingsFile >> autoRefreshTime;
+
+            settingsFile >> edit;
+            settingsFile >> showFps;
+
+            settingsFile >> showLastRerfresh;
+            settingsFile >> showAutoRerfresh;
+
+            settingsFile >> autoSaveDelay;
+
+            settingsFile >> programing_mode;
+
+            settingsFile >> user.bestScore;
+            settingsFile >> user.saldo;
+
+            if (styleColor == 0)
+            {
+                StyleColorsDark();
+            }
+            else if (styleColor == 1)
+            {
+                StyleColorsClassic();
+            }
+            else if (styleColor == 2)
+            {
+                StyleColorsLight();
+            }
+        }
+    } settingsFile.close();
+}
+
 void saveUsersCrypto()
 {
     ofstream userCrypto(tempCrypto + "userCrypto.txt");
@@ -227,6 +299,21 @@ void updateUsersCrypto()
     }
     userCrypto.close();
 }
+void setDefulUser()
+{
+    user.saldo = 100000.f;
+    user.totalSaldo = 0.f;
+    user.score = 0.f;
+    user.bestScore = 0.f;
+    for (int i = 0; i < 999; i++) user.crypto = { 0.f, 0.f };
+}
+void saveUser()
+{
+    updateSettings();
+    saveUsersCrypto();
+
+    return;
+}
 
 void deleteCrypto(int i)
 {
@@ -237,17 +324,29 @@ void deleteCrypto(int i)
     }
 }
 
-void destroy(string fileName)
+void destroyFile(string fileName)
 {
     int status = remove(string(fileName).c_str());
 
 #ifdef _DEBUG
 
-    if (status == 1)
-        cout << "Deleting fail(\"" << fileName << "\") failed" << endl;
-    else
-        cout << "Deleting fail(\"" << fileName << "\") successful" << endl;
+    cout << "Deleting fail(\"" << fileName << "\")";
+    if (status == 1) cout << "failed" << endl;
+    else cout << "successful" << endl;
+
 #endif
+}
+
+void resetScore()
+{
+    destroyFile(tempCrypto + "userCrypto.txt"); // Deleting file reset score.
+    system("start C:\\Users\\mati\\Desktop\\CryptoApp\\imgui-master\\examples\\example_win32_directx9\\Debug\\example_win32_directx9.exe");
+
+    setDefulUser();
+    saveUser();
+
+    Sleep(500);
+    exit(0);
 }
 
 bool isKnownChar(char input)
@@ -284,94 +383,6 @@ float matchCase(string word1, string word2)
         }
         return matchCorrectness / correctedWord1.length() * 100.f;
     }
-}
-
-void saveSettings()
-{
-    ofstream settingsFile(tempCrypto + "settings.txt");
-    {
-        if (!settingsFile.fail()) // Success
-        {
-            settingsFile << styleColor << endl;
-            settingsFile << currency << endl;
-            settingsFile << language << endl;
-
-            settingsFile << autoRefresh << endl;
-            settingsFile << autoRefreshTime << endl;
-
-            settingsFile << edit << endl;
-            settingsFile << showFps << endl;
-
-            settingsFile << showLastRerfresh << endl;
-            settingsFile << showAutoRerfresh << endl;
-
-            settingsFile << autoSaveDelay << endl;
-
-            settingsFile << programing_mode << endl;
-
-            settingsFile << user.bestScore << endl;
-            settingsFile << user.saldo << endl;
-        }
-    }
-    settingsFile.close();
-}
-/*
-
-struct MyStrddawuct
-{
-    float saldo = 100000.f;  +
-    float totalSaldo = 100000.f; - 
-
-    int score = 0;  - 
-    int bestScore = 0; +
-
-    struct frefwefweqf
-    {
-        float owend[999];
-        float total[999];
-    }crypto;
-
-*/
-void updateSettings()
-{
-    ifstream settingsFile(tempCrypto + "settings.txt");
-    {
-        if (!settingsFile.fail()) // Success
-        {
-            settingsFile >> styleColor;
-            settingsFile >> currency;
-            settingsFile >> language;
-
-            settingsFile >> autoRefresh;
-            settingsFile >> autoRefreshTime;
-
-            settingsFile >> edit;
-            settingsFile >> showFps;
-
-            settingsFile >> showLastRerfresh;
-            settingsFile >> showAutoRerfresh;
-
-            settingsFile >> autoSaveDelay;
-
-            settingsFile >> programing_mode;
-
-            settingsFile >> user.bestScore;
-            settingsFile >> user.saldo;
-
-            if (styleColor == 0)
-            {
-                ImGui::StyleColorsDark();
-            }
-            else if (styleColor == 1)
-            {
-                ImGui::StyleColorsClassic();
-            }
-            else if (styleColor == 2)
-            {
-                ImGui::StyleColorsLight();
-            }
-        }
-    } settingsFile.close();
 }
 
 void collectData()
@@ -469,7 +480,7 @@ struct localDateStruct
 
 }localDate;
 
-const std::string currentDateTime()
+const string currentDateTime()
 {
     time_t     now = time(0);
     struct tm  tstruct;
@@ -498,21 +509,21 @@ void getData()
 
 void refresh()
 {
-    system_command(("start " + data_scraper_loc).c_str());
-
+    system_command(("start " + dataScraperLoc).c_str());
     collectData();
+
+    if (cryptoBase[cryptoBaseSize].price != 0.f)
+    {
 #ifdef _DEBUG
-    cout << "Data collected sucesfull." << endl;
+        cout << "Data collected sucesfull." << endl;
+    }
+    else
+    {
+        cout << "Data collected failed." << endl;
 #endif
+    }
     nextRefresh = clock() + autoRefreshTime * 1000;
     lastRefresh = clock();
-}
-
-void resetScore()
-{
-    destroy(tempCrypto + "userCrypto.txt"); // Deleting file reset score.
-    system("start C:\\Users\\mati\\Desktop\\CryptoApp\\imgui-master\\examples\\example_win32_directx9\\Debug\\example_win32_directx9.exe");
-    exit(0);
 }
 
 void takeProfit()
@@ -564,8 +575,8 @@ int main(int, char**)
     ::UpdateWindow(hwnd);
 
     IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    CreateContext();
+    ImGuiIO& io = GetIO(); (void)io;
 
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX9_Init(g_pd3dDevice);
@@ -574,14 +585,14 @@ int main(int, char**)
     {
         if (!placeTxt.fail())
         {
-            placeTxt >> data_scraper_loc;
+            placeTxt >> dataScraperLoc;
         }
         else
         {
             
         }
     } placeTxt.close();
-    print("data_scraper_loc" + data_scraper_loc);
+    print("dataScraperLoc" + dataScraperLoc);
 
     ifstream if_cryptoBaseTxtFile(tempCrypto + "cryptocurrencyBase.txt");
     {
@@ -606,6 +617,7 @@ int main(int, char**)
     refresh();
     collectData();
     updateSettings();
+    setDefulUser();
     updateUsersCrypto();
 
     string dataAnalysis = "NULL";
@@ -628,13 +640,13 @@ int main(int, char**)
 
         ImGui_ImplDX9_NewFrame();
         ImGui_ImplWin32_NewFrame();
-        ImGui::NewFrame();
+        NewFrame();
         {    
-            ImGui::ShowDemoWindow();
+            ShowDemoWindow();
 
-            ImGui::Begin("Cryptocurrency analysis", NULL, window_flags);
+            Begin("Cryptocurrency analysis", NULL, window_flags);
             {
-                if (ImGui::CollapsingHeader("Wallet", ImGuiTreeNodeFlags_None))
+                if (CollapsingHeader("Wallet", ImGuiTreeNodeFlags_None))
                 {
                     user.totalSaldo = user.saldo;
 
@@ -643,187 +655,187 @@ int main(int, char**)
                         user.totalSaldo += user.crypto.owend[i] * cryptoBase[i].price;
                     }
 
-                    ImGui::Text("User saldo:");
-                    ImGui::SameLine();
+                    Text("User saldo:");
+                    SameLine();
                     if (user.saldo > 999) {
 
-                        ImGui::Text(("$" + to_string((int)(user.saldo / 1000)) + "k").c_str());
-                        if (ImGui::IsItemHovered())
+                        Text(("$" + to_string((int)(user.saldo / 1000)) + "k").c_str());
+                        if (IsItemHovered())
                         {
-                            ImGui::BeginTooltip();
-                            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-                            ImGui::TextUnformatted(to_string(user.saldo).c_str());
-                            ImGui::PopTextWrapPos();
-                            ImGui::EndTooltip();
+                            BeginTooltip();
+                            PushTextWrapPos(GetFontSize() * 35.0f);
+                            TextUnformatted(to_string(user.saldo).c_str());
+                            PopTextWrapPos();
+                            EndTooltip();
                         }
                     }
                     else
                     {
-                        ImGui::Text((to_string((int)user.saldo) + "$").c_str());
+                        Text((to_string((int)user.saldo) + "$").c_str());
                     }
 
-                    ImGui::SameLine();
+                    SameLine();
                     user.score = (int)(user.totalSaldo - 100000);
-                    ImGui::Text(("| Score: " + to_string(user.score)).c_str());
+                    Text(("| Score: " + to_string(user.score)).c_str());
 
-                    ImGui::SameLine();
+                    SameLine();
                     user.bestScore = user.bestScore = max(user.bestScore, (int)(user.totalSaldo - 100000));
-                    ImGui::Text(("| Best score: " + to_string(user.score)).c_str());
+                    Text(("| Best score: " + to_string(user.score)).c_str());
 
-                    ImGui::SameLine();
-                    ImGui::Text(("| Total saldo: " + to_string((int)(user.totalSaldo))).c_str());
+                    SameLine();
+                    Text(("| Total saldo: " + to_string((int)(user.totalSaldo))).c_str());
 
-                    ImGui::SameLine();
-                    if (ImGui::Button("Reset score")) resetScore();
+                    SameLine();
+                    if (Button("Reset score")) resetScore();
 
-                    ImGui::SameLine();
-                    if (ImGui::Button("take profit"))  takeProfit();
+                    SameLine();
+                    if (Button("take profit"))  takeProfit();
 
-                    if (ImGui::BeginTable("tablee", 6, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(700, 100)))
+                    if (BeginTable("tablee", 6, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(700, 100)))
                     {
-                        ImGui::TableSetupColumn("Description");
-                        ImGui::TableSetupColumn("Ammount");
-                        ImGui::TableSetupColumn("Market value");
-                        ImGui::TableSetupColumn("Curr. price");
-                        ImGui::TableSetupColumn("24h %");
-                        ImGui::TableSetupColumn("dasd");
+                        TableSetupColumn("Description");
+                        TableSetupColumn("Ammount");
+                        TableSetupColumn("Market value");
+                        TableSetupColumn("Curr. price");
+                        TableSetupColumn("24h %");
+                        TableSetupColumn("dasd");
 
-                        ImGui::TableHeadersRow();
+                        TableHeadersRow();
                     }
 
                     for (int i = 0; i < 999; i++)
                     {
                         if (user.crypto.total[i] > 0)
                         {
-                            ImGui::TableNextRow();
+                            TableNextRow();
                             {
-                                ImGui::TableNextColumn(); // Description
+                                TableNextColumn(); // Description
                                 {
-                                    ImGui::Text((cryptoBase[i].description).c_str());
+                                    Text((cryptoBase[i].description).c_str());
                                 }
-                                ImGui::TableNextColumn(); // Ammount
+                                TableNextColumn(); // Ammount
                                 {
                                     if(user.crypto.owend[i] > 0)
-                                        ImGui::Text(to_string((int)user.crypto.owend[i]).c_str());
+                                        Text(to_string((int)user.crypto.owend[i]).c_str());
                                     else
-                                        ImGui::Text(to_string((float)user.crypto.owend[i]).c_str());
+                                        Text(to_string((float)user.crypto.owend[i]).c_str());
                                 }
-                                ImGui::TableNextColumn(); // Value
+                                TableNextColumn(); // Value
                                 {
-                                    ImGui::Text(to_string((int)user.crypto.total[i]).c_str());
+                                    Text(to_string((int)user.crypto.total[i]).c_str());
                                 }
-                                ImGui::TableNextColumn(); // Curr. price
+                                TableNextColumn(); // Curr. price
                                 {
-                                    ImGui::Text(to_string((int)cryptoBase[i].price).c_str());
+                                    Text(to_string((int)cryptoBase[i].price).c_str());
                                 }
-                                ImGui::TableNextColumn(); // prizeChange24h
+                                TableNextColumn(); // prizeChange24h
                                 {
-                                    ImGui::Text((cryptoBase[i].prizeChange24h).c_str());
+                                    Text((cryptoBase[i].prizeChange24h).c_str());
                                 }
-                                ImGui::TableNextColumn(); // imp
+                                TableNextColumn(); // imp
                                 {
-                                    ImGui::Text((to_string((int)(user.crypto.total[i] / totalSaldo * 100.f)) + "%").c_str());
+                                    Text((to_string((int)(user.crypto.total[i] / totalSaldo * 100.f)) + "%").c_str());
                                 }
                                 /*
                                 { // amount
-                                    ImGui::SameLine();
-                                    ImGui::Text(("amount: " + to_string((int)user.crypto.owend[i]) + ",").c_str());
+                                    SameLine();
+                                    Text(("amount: " + to_string((int)user.crypto.owend[i]) + ",").c_str());
                                 }
                                 { // total
-                                    ImGui::SameLine();
-                                    ImGui::Text(("value: " + to_string((int)user.crypto.total[i]) + "$,").c_str());
+                                    SameLine();
+                                    Text(("value: " + to_string((int)user.crypto.total[i]) + "$,").c_str());
                                 }
                                 { // total
-                                    ImGui::SameLine();
-                                    ImGui::Text(("imp: " + to_string((int)(user.crypto.total[i] * 100.f / totalSaldo)) + "").c_str());
+                                    SameLine();
+                                    Text(("imp: " + to_string((int)(user.crypto.total[i] * 100.f / totalSaldo)) + "").c_str());
                                 }
                                 */
                             }
                         }
                     }
-                    ImGui::EndTable();
+                    EndTable();
                 }
 
-                if (ImGui::CollapsingHeader("Cryptocurrency base", ImGuiTreeNodeFlags_None))
+                if (CollapsingHeader("Cryptocurrency base", ImGuiTreeNodeFlags_None))
                 {
-                    ImGui::Checkbox("Edit", &edit);
+                    Checkbox("Edit", &edit);
 
-                    ImGui::SameLine();
+                    SameLine();
                     filter.Draw("<- Search", 200);
 
-                    ImGui::SameLine();
-                    if (ImGui::Button("Refresh") || autoRefresh == true && nextRefresh < clock())
+                    SameLine();
+                    if (Button("Refresh") || autoRefresh == true && nextRefresh < clock())
                     {
                         refresh();
                     }                    
                     if (showLastRerfresh == true)
                     {
-                        ImGui::SameLine();
-                        ImGui::Text(("(Last refresh " + to_string((clock() - lastRefresh) / 1000) + "s)").c_str());
+                        SameLine();
+                        Text(("(Last refresh " + to_string((clock() - lastRefresh) / 1000) + "s)").c_str());
                     }
                     if (showAutoRerfresh == true)
                     {
                         autoRefreshText = (nextRefresh - clock()) / 1000 + 1;
-                        ImGui::SameLine();
-                        ImGui::Text(("(Auto refresh " + to_string(autoRefreshText) + "s)").c_str());
+                        SameLine();
+                        Text(("(Auto refresh " + to_string(autoRefreshText) + "s)").c_str());
                     }
                     else nextRefresh = clock() + autoRefreshTime * 1000;
                     
-                    if (ImGui::BeginTable("table", 9, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(700, 100)))
+                    if (BeginTable("table", 9, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(700, 100)))
                     {
-                        ImGui::TableSetupColumn("Symbol");
-                        ImGui::TableSetupColumn("Description");
-                        ImGui::TableSetupColumn("Blockchain");
+                        TableSetupColumn("Symbol");
+                        TableSetupColumn("Description");
+                        TableSetupColumn("Blockchain");
 
-                        ImGui::TableSetupColumn("$ Price $");
-                        ImGui::TableSetupColumn("24h % Change");
-                        ImGui::TableSetupColumn("Search results");
-                        ImGui::TableSetupColumn("Type");
-                        ImGui::TableSetupColumn("Add / Delete");
-                        ImGui::TableHeadersRow();
+                        TableSetupColumn("$ Price $");
+                        TableSetupColumn("24h % Change");
+                        TableSetupColumn("Search results");
+                        TableSetupColumn("Type");
+                        TableSetupColumn("Add / Delete");
+                        TableHeadersRow();
                     }
-                    ImGui::TableNextRow();
+                    TableNextRow();
                     {
-                        ImGui::TableNextColumn(); // symbol
+                        TableNextColumn(); // symbol
                         {
-                            ImGui::PushItemWidth(80);
-                            ImGui::InputText(" ", cryptoSymbol, IM_ARRAYSIZE(cryptoSymbol));
+                            PushItemWidth(80);
+                            InputText(" ", cryptoSymbol, IM_ARRAYSIZE(cryptoSymbol));
                         }
-                        ImGui::TableNextColumn(); // description
+                        TableNextColumn(); // description
                         {
-                            ImGui::PushItemWidth(80);
-                            ImGui::InputText("", cryptoDescription, IM_ARRAYSIZE(cryptoDescription));
+                            PushItemWidth(80);
+                            InputText("", cryptoDescription, IM_ARRAYSIZE(cryptoDescription));
                         }
-                        ImGui::TableNextColumn(); // blockchain
+                        TableNextColumn(); // blockchain
                         {
-                            ImGui::PushItemWidth(125);
-                            ImGui::Combo("b", &blockchain[999], blockchains, IM_ARRAYSIZE(blockchains));
+                            PushItemWidth(125);
+                            Combo("b", &blockchain[999], blockchains, IM_ARRAYSIZE(blockchains));
                             if (blockchain[999] == 0) blockchainWin = true;
                         }
-                        ImGui::TableNextColumn(); // price
+                        TableNextColumn(); // price
                         {
-                            ImGui::TextDisabled("Auto-fill");
+                            TextDisabled("Auto-fill");
                         }
-                        ImGui::TableNextColumn(); // 24h prize 
+                        TableNextColumn(); // 24h prize 
                         {
-                            ImGui::TextDisabled("Auto-fill");
+                            TextDisabled("Auto-fill");
                         }
-                        ImGui::TableNextColumn(); // search results
+                        TableNextColumn(); // search results
                         {
-                            ImGui::TextDisabled("Auto-fill");
+                            TextDisabled("Auto-fill");
                         }
-                        ImGui::TableNextColumn(); // type
+                        TableNextColumn(); // type
                         {
-                            ImGui::TextDisabled("Auto-fill");
+                            TextDisabled("Auto-fill");
                         }
-                        ImGui::TableNextColumn(); // add / delete
+                        TableNextColumn(); // add / delete
                         {
-                            ImGui::PushID("add");
-                            ImGui::PushStyleColor(ImGuiCol_Button, greenColor);
-                            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, greenColor);
-                            ImGui::PushStyleColor(ImGuiCol_ButtonActive, greenColor);
+                            PushID("add");
+                            PushStyleColor(ImGuiCol_Button, greenColor);
+                            PushStyleColor(ImGuiCol_ButtonHovered, greenColor);
+                            PushStyleColor(ImGuiCol_ButtonActive, greenColor);
 
-                            if (ImGui::Button("Add"))
+                            if (Button("Add"))
                             {
                                 if ((int)cryptoDescription[0] == 0 || (int)cryptoSymbol[0] == 0)
                                 {
@@ -880,8 +892,8 @@ int main(int, char**)
                                     } of_cryptoBaseTxtFile.close();
                                 }
                             }
-                            ImGui::PopStyleColor(3);
-                            ImGui::PopID();
+                            PopStyleColor(3);
+                            PopID();
                         }
                     }
 
@@ -892,13 +904,13 @@ int main(int, char**)
                             for (int j = 0; j < cryptoBase[i].description.length(); j++) cryptoBaseDescription[i][j] = cryptoBase[i].description[j];
                             for (int j = 0; j < (cryptoBase[i].symbol).length(); j++) cryptoBaseSymbol[i][j] = (cryptoBase[i].symbol)[j];
 
-                            ImGui::TableNextRow();
+                            TableNextRow();
                             {
                                 if (edit == 0)
                                 {
-                                    ImGui::TableNextColumn(); // Symbol
+                                    TableNextColumn(); // Symbol
                                     {
-                                        if (ImGui::Button(cryptoBase[i].symbol.c_str()))
+                                        if (Button(cryptoBase[i].symbol.c_str()))
                                         {
                                             if (dataAnalysisWin == false) dataAnalysisWin = !dataAnalysisWin;
 
@@ -906,97 +918,97 @@ int main(int, char**)
                                             dataAnalysisI = i;
                                         }
                                     }
-                                    ImGui::TableNextColumn(); // Description
+                                    TableNextColumn(); // Description
                                     {
-                                        ImGui::Text(cryptoBaseDescription[i]);
+                                        Text(cryptoBaseDescription[i]);
                                     }
-                                    ImGui::TableNextColumn(); // Blockchain
+                                    TableNextColumn(); // Blockchain
                                     {
                                         /*
-                                        ImGui::Combo(("b" + to_string(i)).c_str(), &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
+                                        Combo(("b" + to_string(i)).c_str(), &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
                                         if (blockchain[i] == 0) blockchainWin = true;
                                         */
                                     }
-                                    ImGui::TableNextColumn(); // $ Price $
+                                    TableNextColumn(); // $ Price $
                                     {
                                         if (cryptoBase[i].price > 999)
                                         {
-                                            ImGui::Text(("$" + to_string((int)(cryptoBase[i].price / 1000)) + "k").c_str());
+                                            Text(("$" + to_string((int)(cryptoBase[i].price / 1000)) + "k").c_str());
 
-                                            if (ImGui::IsItemHovered())
+                                            if (IsItemHovered())
                                             {
-                                                ImGui::BeginTooltip();
-                                                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-                                                ImGui::TextUnformatted(to_string(cryptoBase[i].price).c_str());
-                                                ImGui::PopTextWrapPos();
-                                                ImGui::EndTooltip();
+                                                BeginTooltip();
+                                                PushTextWrapPos(GetFontSize() * 35.0f);
+                                                TextUnformatted(to_string(cryptoBase[i].price).c_str());
+                                                PopTextWrapPos();
+                                                EndTooltip();
                                             }
                                         }
-                                        else ImGui::Text(to_string((float)cryptoBase[i].price).c_str());
+                                        else Text(to_string((float)cryptoBase[i].price).c_str());
                                     }
-                                    ImGui::TableNextColumn(); // 24h prize change
+                                    TableNextColumn(); // 24h prize change
                                     {
                                         if (cryptoBase[i].isIncrese)
-                                            ImGui::TextColored(((ImVec4)ImColor::HSV((float)(cryptoBase[i].alertLevel / 100.f * 0.3), 1.00f, 1.00f, 1)), ("+" + (cryptoBase[i].prizeChange24h)).c_str());
+                                            TextColored(((ImVec4)ImColor::HSV((float)(cryptoBase[i].alertLevel / 100.f * 0.3), 1.00f, 1.00f, 1)), ("+" + (cryptoBase[i].prizeChange24h)).c_str());
                                         else
-                                            ImGui::TextColored(((ImVec4)ImColor::HSV((float)(cryptoBase[i].alertLevel / 100.f * 0.3), 1.00f, 1.00f, 1)), ("-" + (cryptoBase[i].prizeChange24h)).c_str());
+                                            TextColored(((ImVec4)ImColor::HSV((float)(cryptoBase[i].alertLevel / 100.f * 0.3), 1.00f, 1.00f, 1)), ("-" + (cryptoBase[i].prizeChange24h)).c_str());
                                     }
-                                    ImGui::TableNextColumn(); // Search results
+                                    TableNextColumn(); // Search results
                                     {
-                                        ImGui::Text(cryptoBase[i].SearchResults.c_str());
+                                        Text(cryptoBase[i].SearchResults.c_str());
                                     }
-                                    ImGui::TableNextColumn(); // type
+                                    TableNextColumn(); // type
                                     {
-                                        ImGui::Text(cryptoBase[i].typee.c_str());
+                                        Text(cryptoBase[i].typee.c_str());
                                     }
                                     /*
-                                    ImGui::TableNextColumn(); // add / delete
+                                    TableNextColumn(); // add / delete
                                     {
 
                                     }*/
                                 }
                                 else if (edit == 1)
                                 {
-                                    ImGui::TableNextColumn(); // Symbol
+                                    TableNextColumn(); // Symbol
                                     {
-                                        ImGui::PushItemWidth(80);
-                                        ImGui::InputText((" " + to_string(i)).c_str(), cryptoBaseSymbol[i], IM_ARRAYSIZE(cryptoBaseSymbol[i]));
+                                        PushItemWidth(80);
+                                        InputText((" " + to_string(i)).c_str(), cryptoBaseSymbol[i], IM_ARRAYSIZE(cryptoBaseSymbol[i]));
                                     }
-                                    ImGui::TableNextColumn(); // Description
+                                    TableNextColumn(); // Description
                                     {
-                                        ImGui::PushItemWidth(80);
-                                        ImGui::InputText(to_string(i).c_str(), cryptoBaseDescription[i], IM_ARRAYSIZE(cryptoBaseDescription[i]));
+                                        PushItemWidth(80);
+                                        InputText(to_string(i).c_str(), cryptoBaseDescription[i], IM_ARRAYSIZE(cryptoBaseDescription[i]));
                                     }
-                                    ImGui::TableNextColumn(); // Blockchain
+                                    TableNextColumn(); // Blockchain
                                     {
-                                        ImGui::PushItemWidth(125);
-                                        ImGui::Combo("Blockchain", &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
+                                        PushItemWidth(125);
+                                        Combo("Blockchain", &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
                                         if (blockchain[i] == 0) blockchainWin = true;
                                     }
-                                    ImGui::TableNextColumn(); // $ Price $
+                                    TableNextColumn(); // $ Price $
                                     {
-                                        ImGui::TextDisabled(to_string((double)cryptoBase[i].price).c_str());
+                                        TextDisabled(to_string((double)cryptoBase[i].price).c_str());
                                     }
-                                    ImGui::TableNextColumn(); // 24h prize change
+                                    TableNextColumn(); // 24h prize change
                                     {
-                                        ImGui::TextDisabled(cryptoBase[i].prizeChange24h.c_str());
+                                        TextDisabled(cryptoBase[i].prizeChange24h.c_str());
                                     }
-                                    ImGui::TableNextColumn(); // Search results
+                                    TableNextColumn(); // Search results
                                     {
-                                        ImGui::TextDisabled(cryptoBase[i].SearchResults.c_str());
+                                        TextDisabled(cryptoBase[i].SearchResults.c_str());
                                     }
-                                    ImGui::TableNextColumn(); // Type
+                                    TableNextColumn(); // Type
                                     {
-                                        ImGui::TextDisabled(cryptoBase[i].typee.c_str());
+                                        TextDisabled(cryptoBase[i].typee.c_str());
                                     }
-                                    ImGui::TableNextColumn(); // Add / Delete
+                                    TableNextColumn(); // Add / Delete
                                     {
-                                        ImGui::PushID(i);
-                                        ImGui::PushStyleColor(ImGuiCol_Button, redColor);
-                                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, redColor);
-                                        ImGui::PushStyleColor(ImGuiCol_ButtonActive, redColor);
+                                        PushID(i);
+                                        PushStyleColor(ImGuiCol_Button, redColor);
+                                        PushStyleColor(ImGuiCol_ButtonHovered, redColor);
+                                        PushStyleColor(ImGuiCol_ButtonActive, redColor);
 
-                                        if (ImGui::Button(("Delete no." + to_string(i)).c_str()))
+                                        if (Button(("Delete no." + to_string(i)).c_str()))
                                         {
                                             deleteCrypto(i);
                                             ofstream of_cryptoBaseTxtFile(tempCrypto + "cryptocurrencyBase.txt");
@@ -1015,8 +1027,8 @@ int main(int, char**)
                                                 }
                                             } of_cryptoBaseTxtFile.close();
                                         }
-                                        ImGui::PopStyleColor(3);
-                                        ImGui::PopID();
+                                        PopStyleColor(3);
+                                        PopID();
                                     }
                                 }
                             }
@@ -1024,79 +1036,79 @@ int main(int, char**)
                             for (int j = 0; j < 120; j++) cryptoBase[i].symbol = cryptoBaseSymbol[i];
                         }
                     }
-                    ImGui::EndTable();
+                    EndTable();
                 }
 
-                if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_None))
+                if (CollapsingHeader("Settings", ImGuiTreeNodeFlags_None))
                 {
-                    ImGuiStyle& style = ImGui::GetStyle();
-                    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 1.0f));
-                    ImVec2 scrolling_child_size = ImVec2(0, ImGui::GetFrameHeightWithSpacing() * 7 + 30);
-                    ImGui::BeginChild("scrolling", ImVec2(700, 100), true, ImGuiWindowFlags_HorizontalScrollbar);
+                    ImGuiStyle& style = GetStyle();
+                    PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+                    PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 1.0f));
+                    ImVec2 scrolling_child_size = ImVec2(0, GetFrameHeightWithSpacing() * 7 + 30);
+                    BeginChild("scrolling", ImVec2(700, 100), true, ImGuiWindowFlags_HorizontalScrollbar);
                     {
-                        if (ImGui::BeginTable("table/settings", 6, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(1500, 100)))
+                        if (BeginTable("table/settings", 6, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(1500, 100)))
                         {
-                            ImGui::TableSetupColumn("       Visual");
-                            ImGui::TableSetupColumn("       Shortcuts");
-                            ImGui::TableSetupColumn("       Misc");
-                            ImGui::TableSetupColumn("       Preferences");
-                            ImGui::TableSetupColumn("       Automation");
-                            ImGui::TableSetupColumn("       Fix");
-                            ImGui::TableHeadersRow();
+                            TableSetupColumn("       Visual");
+                            TableSetupColumn("       Shortcuts");
+                            TableSetupColumn("       Misc");
+                            TableSetupColumn("       Preferences");
+                            TableSetupColumn("       Automation");
+                            TableSetupColumn("       Fix");
+                            TableHeadersRow();
                         }
 
-                        ImGui::TableNextRow(); // row
+                        TableNextRow(); // row
                         {
-                            ImGui::TableNextColumn(); // Visual
+                            TableNextColumn(); // Visual
                             {
-                                ImGui::Checkbox("show last rerfresh", &showLastRerfresh);
+                                Checkbox("show last rerfresh", &showLastRerfresh);
 
-                                ImGui::Checkbox("show auto-rerfresh", &showAutoRerfresh);
+                                Checkbox("show auto-rerfresh", &showAutoRerfresh);
 
-                                ImGui::Checkbox("Show fps", &showFps);
+                                Checkbox("Show fps", &showFps);
                             }
-                            ImGui::TableNextColumn(); // Shortcuts
+                            TableNextColumn(); // Shortcuts
                             {
-                                if (ImGui::Button("Open Crpyto temp folder"))
+                                if (Button("Open Crpyto temp folder"))
                                 {
                                     system_command(("start " + tempCrypto).c_str());
                                 }
-                                if (ImGui::Button("Open coinmarketcap.com"))
+                                if (Button("Open coinmarketcap.com"))
                                 {
                                     system("start https://coinmarketcap.com/currencies/");
                                 }
-                                if (ImGui::Button("Open Google finance"))
+                                if (Button("Open Google finance"))
                                 {
                                     system("start https://www.google.com/finance/");
                                 }
                             }
-                            ImGui::TableNextColumn(); // Misc
+                            TableNextColumn(); // Misc
                             {
-                                ImGui::Checkbox("Programing mode", &programing_mode);
+                                Checkbox("Programing mode", &programing_mode);
                             }
-                            ImGui::TableNextColumn(); // Preferences
+                            TableNextColumn(); // Preferences
                             {
-                                ImGui::Combo("Style color", &styleColor, "Dark\0Light\0Classic\0");
+                                Combo("Style color", &styleColor, "Dark\0Light\0Classic\0");
 
-                                ImGui::Combo("Language", &language, "English\0...\0");
+                                Combo("Language", &language, "English\0...\0");
 
-                                ImGui::Combo("Currency", &currency, "Dollar$\0...\0");
+                                Combo("Currency", &currency, "Dollar$\0...\0");
                             }
-                            ImGui::TableNextColumn(); // Misc
+                            TableNextColumn(); // Misc
                             {
-                                ImGui::Checkbox("Auto refresh", &autoRefresh);
+                                Checkbox("Auto refresh", &autoRefresh);
 
-                                ImGui::SameLine();
-                                ImGui::PushItemWidth(80);
+                                SameLine();
+                                PushItemWidth(80);
 
                                 if (autoRefresh == false)
-                                    ImGui::BeginDisabled();
+                                    BeginDisabled();
 
-                                ImGui::SliderInt("sec", &autoRefreshTimeTmp, 5, 300);
+                                SliderInt("sec", &autoRefreshTimeTmp, 5, 300);
 
                                 if (autoRefresh == false)
-                                    ImGui::EndDisabled();
+                                    EndDisabled();
 
 
                                 if (autoRefresh == true)
@@ -1113,21 +1125,21 @@ int main(int, char**)
                                 }
 
                                 if (styleColor == 0)
-                                    ImGui::StyleColorsDark();
+                                    StyleColorsDark();
 
                                 else if (styleColor == 1)
-                                    ImGui::StyleColorsClassic();
+                                    StyleColorsClassic();
 
                                 else if (styleColor == 2)
-                                    ImGui::StyleColorsLight();
+                                    StyleColorsLight();
 
-                                ImGui::Text("Auto-save after delay");
+                                Text("Auto-save after delay");
 
-                                ImGui::SameLine();
+                                SameLine();
 
                                 autoSaveDelayTmp = autoSaveDelay;
 
-                                ImGui::SliderInt("sec ", &autoSaveDelayTmp, 1, 100);
+                                SliderInt("sec ", &autoSaveDelayTmp, 1, 100);
 
                                 if (autoSaveDelay != autoSaveDelayTmp)
                                 {
@@ -1135,32 +1147,32 @@ int main(int, char**)
                                 }
                                 autoSaveDelay = autoSaveDelayTmp;
                             }
-                            ImGui::TableNextColumn();
+                            TableNextColumn();
                             {
-                                if (ImGui::Button("fix refresh btn"))
+                                if (Button("fix refresh btn"))
                                 {
-                                    destroy("place.txt");
-                                    system_command(("start " + data_scraper_loc).c_str());
+                                   destroyFile("place.txt");
+                                    system_command(("start " + dataScraperLoc).c_str());
                                 }
                             }
                         }
-                        ImGui::EndTable();
+                        EndTable();
                     }
-                    ImGui::EndChild();
-                    ImGui::PopStyleVar(2);
-                    ImGui::Spacing();
+                    EndChild();
+                    PopStyleVar(2);
+                    Spacing();
                 }
 
                 if(colorTool == true && programing_mode == true)
-                    if (ImGui::CollapsingHeader("color", ImGuiTreeNodeFlags_None))
+                    if (CollapsingHeader("color", ImGuiTreeNodeFlags_None))
                     {
                         static ImVec4 color_hsv(0.23f, 1.0f, 1.0f, 1.0f); // Stored as HSV!
 
-                        ImGui::ColorEdit4("HSV shown as HSV##1", (float*)&color_hsv, ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
+                        ColorEdit4("HSV shown as HSV##1", (float*)&color_hsv, ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
                     }
 
                 if (showFps == true)
-                    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                    Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / GetIO().Framerate, GetIO().Framerate);
             }
 
             if (autoSaveTime < clock())
@@ -1169,18 +1181,18 @@ int main(int, char**)
 
                 autoSaveTime = clock() + (autoSaveDelay * 1000);
             }
-            ImGui::End();
+            End();
 
             if (blockchainWin == true)
             {
-                ImGui::Begin("Add new Blockchain", NULL, NULL);
+                Begin("Add new Blockchain", NULL, NULL);
                 {
-                    ImGui::InputText("", addNewBlockchain, IM_ARRAYSIZE(addNewBlockchain));
-                    ImGui::SameLine();
-                    if (ImGui::Button("Add"))
+                    InputText("", addNewBlockchain, IM_ARRAYSIZE(addNewBlockchain));
+                    SameLine();
+                    if (Button("Add"))
                     {
                         blockchains[blockchainNum] = addNewBlockchain;
-                        cout << "blockchainNum " << blockchainNum << endl;
+                    //    cout << "blockchainNum " << blockchainNum << endl;
 
                         blockchainNum += 1;
                         blockchainWin = false;
@@ -1188,21 +1200,21 @@ int main(int, char**)
                         for (int i = 0; i < 99; i++) { addNewBlockchain[i] = (char)0; }
                     }
                 }
-                ImGui::End();
+                End();
             }
             
             if (dataAnalysisWin == true)
             {
-                ImGui::Begin(dataAnalysis.c_str(), NULL);
+                Begin(dataAnalysis.c_str(), NULL);
                 {
-                    ImGui::Text((cryptoBase[dataAnalysisI].description + " price ").c_str());
-                    ImGui::SameLine();
-                    ImGui::Text((to_string((double)cryptoBase[dataAnalysisI].price) + "$").c_str());
+                    Text((cryptoBase[dataAnalysisI].description + " price ").c_str());
+                    SameLine();
+                    Text((to_string((double)cryptoBase[dataAnalysisI].price) + "$").c_str());
 
-                    if (ImGui::TreeNode(("Alert level " + to_string((int)cryptoBase[dataAnalysisI].alertLevel) + "%").c_str()))
+                    if (TreeNode(("Alert level " + to_string((int)cryptoBase[dataAnalysisI].alertLevel) + "%").c_str()))
                     {
-                        ImGui::SameLine();
-                        if (ImGui::Button("Change value"))
+                        SameLine();
+                        if (Button("Change value"))
                         {
                             string str(cryptoAlertLevel);
 
@@ -1210,17 +1222,17 @@ int main(int, char**)
 
                             for (int i = 0; i < 127; i++) cryptoAlertLevel[i] = (int)0;
                         }
-                        ImGui::SameLine();
-                        ImGui::PushItemWidth(40);
-                        ImGui::InputText("%", cryptoAlertLevel, 64, ImGuiInputTextFlags_CharsDecimal);
-                        ImGui::SameLine();
-                        ImGui::TextDisabled("(Text color depend on it)");
-                        ImGui::TreePop();
+                        SameLine();
+                        PushItemWidth(40);
+                        InputText("%", cryptoAlertLevel, 64, ImGuiInputTextFlags_CharsDecimal);
+                        SameLine();
+                        TextDisabled("(Text color depend on it)");
+                        TreePop();
                     }
-                    if (ImGui::TreeNode("Buy/Sell"))
+                    if (TreeNode("Buy/Sell"))
                     {
-                        ImGui::SameLine();
-                        if (ImGui::Button("Buy "))
+                        SameLine();
+                        if (Button("Buy "))
                         {
                             if (atof(addAmount) * cryptoBase[dataAnalysisI].price < user.saldo)
                             {
@@ -1231,12 +1243,12 @@ int main(int, char**)
                             }
                             else addError("You dont own that much credits");
                         }
-                        ImGui::SameLine();
-                        ImGui::PushItemWidth(60);
-                        ImGui::InputText("or", addAmount, 64, ImGuiInputTextFlags_CharsDecimal);
+                        SameLine();
+                        PushItemWidth(60);
+                        InputText("or", addAmount, 64, ImGuiInputTextFlags_CharsDecimal);
 
-                        ImGui::SameLine();
-                        if (ImGui::Button("All"))
+                        SameLine();
+                        if (Button("All"))
                         {
                             for (int i = 0; i < to_string(cryptoBase[dataAnalysisI].price / user.saldo).length(); i++)
                             {
@@ -1244,9 +1256,9 @@ int main(int, char**)
                             }
                         }
 
-                        ImGui::SameLine();
+                        SameLine();
 
-                        if (ImGui::Button("Sell"))
+                        if (Button("Sell"))
                         {
                             if (atof(sellAmount) <= 0.01 + user.crypto.owend[dataAnalysisI])
                             {
@@ -1258,28 +1270,27 @@ int main(int, char**)
                             else addError("You dont own that much crypto");
                         }
                         
-                        ImGui::SameLine();
-                        ImGui::PushItemWidth(60);
-                        ImGui::InputText("          ", sellAmount, 64, ImGuiInputTextFlags_CharsDecimal);
+                        SameLine();
+                        PushItemWidth(60);
+                        InputText("%", sellAmount, 64, ImGuiInputTextFlags_CharsDecimal);
 
-                        ImGui::SameLine();
-                        if (ImGui::Button("All"))
+                        SameLine();
+                        if (Button("All"))
                         {
                             for (int i = 0; i < to_string(user.crypto.owend[dataAnalysisI]).length(); i++)
                             {
                                 sellAmount[i] = (char)to_string(user.crypto.owend[dataAnalysisI])[i];
                             }
                         }
-                        ImGui::TreePop();
+                        TreePop();
                     }
-
-                }//
-                ImGui::End();
+                }
+                End();
             }
             showErrorWindow();
         }
 
-        ImGui::EndFrame();
+        EndFrame();
         g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
         g_pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
         g_pd3dDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
@@ -1287,8 +1298,8 @@ int main(int, char**)
         g_pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, clear_col_dx, 1.0f, 0);
         if (g_pd3dDevice->BeginScene() >= 0)
         {
-            ImGui::Render();
-            ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+            Render();
+            ImGui_ImplDX9_RenderDrawData(GetDrawData());
             g_pd3dDevice->EndScene();
         }
         HRESULT result = g_pd3dDevice->Present(NULL, NULL, NULL, NULL);
@@ -1300,7 +1311,7 @@ int main(int, char**)
 
     ImGui_ImplDX9_Shutdown();
     ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
+    DestroyContext();
 
     CleanupDeviceD3D();
     ::DestroyWindow(hwnd);

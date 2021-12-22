@@ -75,7 +75,7 @@ namespace scraper
             HtmlWeb web = new HtmlWeb();
             HtmlDocument doc = web.Load("https://www.google.com/search?q=bitcoin+(btc)");
            
-            return doc.DocumentNode.SelectNodes("//*[@class=\"iXabQc vgpkr\"]").First().InnerText.ToCharArray()[0];
+             return doc.DocumentNode.SelectNodes("//*[@class=\"iXabQc vgpkr\"]").First().InnerText.ToCharArray()[0];
         }
 
         public static void sendMessage()
@@ -111,11 +111,11 @@ namespace scraper
             }
             
             print("--------------------------");
-            print("gwenufiw " + gwenufiw());
+       //     print("gwenufiw " + gwenufiw());
             print("Test:  Bitcoin");
             print("Type:  " + getCryptoType("bitcoin"));
             print(getCryptoPrice("bitcoin"));
-            print("" + gwenufiw());
+       //     print("" + gwenufiw());
             print("--------------------------");
 
             StreamReader readData = new StreamReader(cryptoFile + "cryptocurrencyBase.txt");
@@ -143,7 +143,7 @@ namespace scraper
                         }
                         else if (turnFor == 1)
                         {
-                            scapedData.WriteLine(symb + " " + getCryptoType(desc) + " " + getCryptoPrice(desc) + gwenufiw());
+                            scapedData.WriteLine(symb + " " + getCryptoType(desc) + " " + getCryptoPrice(desc) + "+");
                             turnFor = 0;
                             desc = "";
                             symb = "";
