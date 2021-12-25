@@ -1,0 +1,12 @@
+C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\bin\Debug\netcoreapp3.1\CryptoApp-Launcher.exe
+C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\bin\Debug\netcoreapp3.1\CryptoApp-Launcher.deps.json
+C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\bin\Debug\netcoreapp3.1\CryptoApp-Launcher.runtimeconfig.json
+C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\bin\Debug\netcoreapp3.1\CryptoApp-Launcher.runtimeconfig.dev.json
+C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\bin\Debug\netcoreapp3.1\CryptoApp-Launcher.dll
+C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\bin\Debug\netcoreapp3.1\CryptoApp-Launcher.pdb
+C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\obj\Debug\netcoreapp3.1\CryptoApp-Launcher.AssemblyInfoInputs.cache
+C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\obj\Debug\netcoreapp3.1\CryptoApp-Launcher.AssemblyInfo.cs
+C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\obj\Debug\netcoreapp3.1\CryptoApp-Launcher.csproj.CoreCompileInputs.cache
+C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\obj\Debug\netcoreapp3.1\CryptoApp-Launcher.dll
+C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\obj\Debug\netcoreapp3.1\CryptoApp-Launcher.pdb
+C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\obj\Debug\netcoreapp3.1\CryptoApp-Launcher.genruntimeconfig.cache

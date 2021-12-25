@@ -8,8 +8,9 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <filesystem>
+#include <direct.h> // mkdir()
 #include <time.h>
-
+#include <iomanip>
 #include <d3d9.h> 
 #include "imgui.h"
 #include "imgui_impl_dx9.h"
@@ -33,44 +34,59 @@ void ResetDevice();
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-ImVec4 redColor = (ImVec4)ImColor::HSV(1.f, 1.f, 1.f, 0.8f);
-ImVec4 blueColor = (ImVec4)ImColor::HSV(0.6, 1.f, 1.f, 0.8f);
-ImVec4 greenColor = (ImVec4)ImColor::HSV(0.3f, 1.f, 1.f, 0.8f);
+const string tempFolder = getenv("TEMP"); // temp folder
+const string tempCrypto = tempFolder + "\\Crypto\\"; // crypto folder in temp
 
-string tempFolder = getenv("TEMP");
-string tempCrypto = tempFolder + "\\Crypto\\";
+const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+const ImVec4 redColor = (ImVec4)ImColor::HSV(1.f, 1.f, 1.f, 0.8f);
+const ImVec4 blueColor = (ImVec4)ImColor::HSV(0.6, 1.f, 1.f, 0.8f);
+const ImVec4 greenColor = (ImVec4)ImColor::HSV(0.3f, 1.f, 1.f, 0.8f);
 
-// Settings
-static int  styleColor = 1; // dropdown / setting
-static int  currency = 0; // dropdown / setting
-static int  language = 0; // dropdown / setting
+static int styleColor = 1; // combo / setting
+static int currency = 0; // combo / setting
+static int language = 0; // combo / setting
 static bool edit = false; // checkbox / setting
 static bool showFps = true; // checkbox / setting
-static bool showLastRerfresh = true;
-static bool showAutoRerfresh = true;
-static int  autoSaveDelay = 30;
-static int  autoRefreshText = 300;
-static int  autoRefreshTime = 300; // in secounds
-static int  nextRefresh = 300; // 
-static int  lastRefresh = 0; // 
-static bool autoRefresh = true; //  checkbox / setting
-
-static int autoRefreshTimeTmp = autoRefreshTime; // ??
-static int autoSaveDelayTmp = autoSaveDelay; // ??
-
-static string cryptoBaseTxt = ""; // file text storage // auto-fill
+static bool showLastRerfresh = true; // checkbox / setting
+static bool showAutoRerfresh = true; // checkbox / setting
+static int autoSaveDelay = 30; // int_silder // setting
+static int autoRefreshText = 300; // (s) to next refresh / setting
+static int autoRefreshTime = 300; // int_slider 
+static int nextRefresh = 300; // point of time of next refresh
+static int lastRefresh = 0; // point of time of last refresh
+static bool autoRefresh = true; // checkbox / setting
+static int autoRefreshTimeTmp = autoRefreshTime; // check changes
+static int autoSaveDelayTmp = autoSaveDelay; // check changes
+static string cryptoBaseTxt = ""; // text storage // auto-fill
 static int cryptoBaseSize = 0; // Size of cryptoBase // auto-fill
-
-static int  cryptoBlockchain; // combox   
+//static int  cryptoBlockchain; // combox   
 static char cryptoDescription[128]; // InputText 
 static char cryptoSymbol[128]; // InputText     
-static char cryptoPrice[128]; // auto-fill
+//static char cryptoPrice[128]; // auto-fill
+//static int  cryptoBlockchainTmp[999]; // Blockchain temp table 
+static char cryptoBaseDescription[999][128]; // input text
+static char cryptoBaseSymbol[999][128]; // input text
+//static char cryptoBasePrice[999][128];
 
-static int  cryptoBlockchainTmp[999]; // Blockchain temp table 
-static char cryptoBaseDescription[999][128];
-static char cryptoBaseSymbol[999][128];
-static char cryptoBasePrice[999][128];
+static char passwordTI[128];
+static char loginTI[128];
+
+static bool ownedF = false; // chekcbox
+
+static int sortBy = NULL; // combobox currently selected item
+
+static bool programingMode = true; // checkbox
+static bool colorTool = true; // CollapsingHeader / progrmingMode
+
+static char cryptoAlertLevel[128]; // auto-fill
+static int autoSaveTime = 0;
+static int totalSaldo = 0;
+static int bestScore = 0;
+static bool cHashPath = false;
+static string dataScraperLoc = "";
+
+static char addAmount[128];
+static char sellAmount[128];
 
 static char* blockchains[] = { "Add Blockchain", "empty" };
 static int blockchain[1000];
@@ -79,24 +95,7 @@ static int blockchainNum = 1;
 static bool blockchainWin = false;
 static char addNewBlockchain[128];
 
-static bool programing_mode = true; //
-
-static bool colorTool = true; // CollapsingHeader / progrming_mode
-
 static bool alertLevel = true;
-static char cryptoAlertLevel[128]; // auto-fill
-
-static int autoSaveTime = 0;
-
-static int totalSaldo = 0;
-static int bestScore = 0;
-
-string dataScraperLoc = "";
-
-static char addAmount[128];
-static char sellAmount[128];
-
-static float kursDolara = 4.11;
 
 const char* errorReason = NULL; // error reason text
 static bool errorVisible = false; // error win visible
@@ -120,81 +119,196 @@ static void showErrorWindow()
 const char* commandText = NULL;
 void system_command(const char* text) { system(commandText = text); }
 
-static void print(string text) { cout << text << endl; }
-
-template <typename type> type rev(type value)
+struct localDateStruct
 {
-    if constexpr (is_same_v<type, bool>)
-    {
-        return !value;
-    }
-    else if constexpr (is_same_v<type, int>)
-    {
-        if (value < 0) return value * -1;
-        else return value;
-    }
-    else if constexpr (is_same_v<type, float> || is_same_v<type, double> || is_same_v<type, double long>)
-    {
-        if (value < 0) return value * -1;
-        else return value;
-    }
-    else if constexpr (is_same_v<type, vec2>)
-    {
-        vec2 return_value = value;
+    string year = "";
+    string month = "";
+    string day = "";
 
-        if (return_value.x < 0) return_value.x *= -1.f;
-        if (return_value.y < 0) return_value.y *= -1.f;
+}localDate, dateExp;
+const string currentDateTime()
+{
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+    return buf;
+}
+void getDataTime()
+{
+    const string dataTime = currentDateTime();
+    static int tf = 0;
 
-        return return_value;
-    }
-    else if constexpr (is_same_v<type, vec3>)
+    for (int i = 0; i < dataTime.length(); i++)
     {
-        vec3 return_value = value;
-
-        if (return_value.x < 0) return_value.x *= -1.f;
-        if (return_value.y < 0) return_value.y *= -1.f;
-        if (return_value.z < 0) return_value.z *= -1.f;
-
-        return return_value;
+        if (dataTime[i] == '-' || dataTime[i] == '.') tf++;
+        else
+        {
+            if (tf == 0) localDate.year += dataTime[i];
+            if (tf == 1) localDate.month += dataTime[i];
+            if (tf == 2) localDate.day += dataTime[i];
+        }
     }
-    else return value;
 }
 
-struct CryptocurrencyStruct
+struct
 {
     string description = "NULL"; // user input
     string symbol = "NULL";  // user input
     int Blockchain = 0; // user input
-    float alertLevel = 100; // user input
+    struct { float bot, top; } alertLevel;
+
     double price = NULL; // auto-fill
     string typee = "auto-fill"; // auto fill
     string prizeChange24h = "auto-fill"; //auto fill
     bool isIncrese = NULL; // auto fill
     string SearchResults = "auto-fill"; // auto fill
     
-}grab, cryptoBase[999], cryptoExamples[2];
+}grab, cryptoBase[999];
 
-struct MyStrddawuct
+struct userStruct
 {
-    float saldo = 100000.f;
-    float totalSaldo = 100000.f;
+    string login;
+    string password;
+    bool remember;
 
-    int score = 0;
-    int bestScore = 0;
+    float saldo;
+    float totalSaldo;
 
-    struct frefwefweqf
+    int score;
+    int bestScore;
+
+    struct
     {
         float owend[999];
         float total[999];
     }crypto;
 
-}user;
+}user, users[999];
+static int usersNum = 0;
+static bool activeUser = false;
+
+const char c_cryptoNum = 20;
+const char c_usersNum = 10;
+
+void userSetDefult(userStruct user)
+{
+    user.login = "";
+    user.password = "";
+    user.remember = false;
+    user.saldo = 100000.f;
+    user.totalSaldo = 0.f;
+    user.score = 0.f;
+    user.bestScore = 0.f;
+    for (int i = 0; i < 999; i++)
+        user.crypto = { 0.f, 0.f };
+
+    return;
+}
+
+void userSave(userStruct user)
+{
+    ofstream userCrypto(tempCrypto + "userCrypto.txt");
+    {
+        if (userCrypto.fail()) return;
+
+        userCrypto << user.saldo << endl;
+        userCrypto << user.bestScore << endl;
+        userCrypto << user.login << endl;
+        userCrypto << user.password << endl;
+        userCrypto << user.remember << endl;
+
+        for (int i = 0; i < c_cryptoNum; i++)
+        {
+            userCrypto << user.crypto.total[i] << endl;
+            userCrypto << user.crypto.owend[i] << endl;
+        }
+    } userCrypto.close();
+
+    return;
+}
+void usersSave()
+{
+    for (int j = 0; j < c_usersNum; j++)
+    {
+        userSave(users[j]);
+    }
+    return;
+}
+
+void userLoad(userStruct user)
+{
+    ifstream userCrypto(tempCrypto + "userCrypto.txt");
+    {
+        if (userCrypto.fail())
+        {
+            userSetDefult(user);
+            return;
+        }
+
+        userCrypto >> user.saldo;
+        userCrypto >> user.bestScore;
+        userCrypto >> user.login;
+        userCrypto >> user.password;
+        userCrypto >> user.remember;
+
+        for (int i = 0; i < c_cryptoNum; i++)
+        {
+            userCrypto >> user.crypto.total[i];
+            userCrypto >> user.crypto.owend[i];
+        }
+
+    } userCrypto.close();
+    return;
+}
+void usersLoad()
+{
+    for (int i = 0; i < c_usersNum; i++)
+    {
+        userLoad(users[i]);
+    }
+    return;
+}
+
+void addUser(string login, string password)
+{
+    users[usersNum].login = login;
+    users[usersNum++].password = password;
+
+    ofstream usersFile(tempCrypto + "usersBase.txt");
+    {
+        usersFile << login << endl;
+        usersFile << password << endl;
+
+    } usersFile.close();
+
+    return;
+}/*
+void userBaseUpdate()
+{
+    ifstream usersFile(tempCrypto + "usersBase.txt");
+    {
+        if (!usersFile.fail())
+        {
+            static string str;
+
+            while (usersFile >> users[usersNum].login)
+            {
+                usersFile >> users[usersNum++].password;
+            }
+        }
+    } usersFile.close();
+
+    return;
+}
+*/
 
 void saveSettings()
 {
     ofstream settingsFile(tempCrypto + "settings.txt");
     {
-        if (!settingsFile.fail()) // Success
+        if (!settingsFile.fail())
         {
             settingsFile << styleColor << endl;
             settingsFile << currency << endl;
@@ -211,13 +325,11 @@ void saveSettings()
 
             settingsFile << autoSaveDelay << endl;
 
-            settingsFile << programing_mode << endl;
-
-            settingsFile << user.bestScore << endl;
-            settingsFile << user.saldo << endl;
+            settingsFile << programingMode << endl;
         }
-    }
-    settingsFile.close();
+    } settingsFile.close();
+
+    return;
 }
 void updateSettings()
 {
@@ -240,77 +352,13 @@ void updateSettings()
 
             settingsFile >> autoSaveDelay;
 
-            settingsFile >> programing_mode;
+            settingsFile >> programingMode;
 
-            settingsFile >> user.bestScore;
-            settingsFile >> user.saldo;
-
-            if (styleColor == 0)
-            {
-                StyleColorsDark();
-            }
-            else if (styleColor == 1)
-            {
-                StyleColorsClassic();
-            }
-            else if (styleColor == 2)
-            {
-                StyleColorsLight();
-            }
+            if (styleColor == 0) StyleColorsDark();
+            else if (styleColor == 1) StyleColorsClassic();
+            else if (styleColor == 2) StyleColorsLight();
         }
     } settingsFile.close();
-}
-
-void saveUsersCrypto()
-{
-    ofstream userCrypto(tempCrypto + "userCrypto.txt");
-    {
-        if (!userCrypto.fail()) {
-            for (int i = 0; i < 999; i++)
-            {
-                userCrypto << user.crypto.total[i] << endl;
-                userCrypto << user.crypto.owend[i] << endl;
-            }
-            userCrypto << user.saldo;
-        }
-    }
-    userCrypto.close();
-}
-void updateUsersCrypto()
-{
-    ifstream userCrypto(tempCrypto + "userCrypto.txt");
-    {
-        if (!userCrypto.fail()) {
-            for (int i = 0; i < 999; i++)
-            {
-                userCrypto >> user.crypto.total[i];
-                userCrypto >> user.crypto.owend[i];
-            }
-            userCrypto >> user.saldo;
-        }
-        else
-        {
-            for (int i = 0; i < 999; i++)
-            {
-                user.crypto.total[i] = 0;
-                user.crypto.owend[i] = 0;
-            }
-        }
-    }
-    userCrypto.close();
-}
-void setDefulUser()
-{
-    user.saldo = 100000.f;
-    user.totalSaldo = 0.f;
-    user.score = 0.f;
-    user.bestScore = 0.f;
-    for (int i = 0; i < 999; i++) user.crypto = { 0.f, 0.f };
-}
-void saveUser()
-{
-    updateSettings();
-    saveUsersCrypto();
 
     return;
 }
@@ -322,91 +370,53 @@ void deleteCrypto(int i)
         cryptoBase[j - 1].symbol = cryptoBase[j].symbol;
         cryptoBase[j - 1].description = cryptoBase[j].description;
     }
+
+    return;
 }
 
 void destroyFile(string fileName)
 {
-    int status = remove(string(fileName).c_str());
+    const int status = remove(string(fileName).c_str());
 
 #ifdef _DEBUG
-
     cout << "Deleting fail(\"" << fileName << "\")";
     if (status == 1) cout << "failed" << endl;
     else cout << "successful" << endl;
-
 #endif
+
+    return;
 }
 
 void resetScore()
 {
-    destroyFile(tempCrypto + "userCrypto.txt"); // Deleting file reset score.
-    system("start C:\\Users\\mati\\Desktop\\CryptoApp\\imgui-master\\examples\\example_win32_directx9\\Debug\\example_win32_directx9.exe");
+    userSetDefult(user);
+    userSave(user);
 
-    setDefulUser();
-    saveUser();
+    system("start C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\imgui-master\\examples\\example_win32_directx9\\Release\\example_win32_directx9.exe");
 
-    Sleep(500);
-    exit(0);
+    return exit(0);
 }
 
-bool isKnownChar(char input)
-{
-    if ((int)input <= 172 && (int)input > 63)
-        return true;
-    else
-        return false;
-}
-
-float matchCase(string word1, string word2)
-{
-    string correctedWord1 = "";
-    string correctedWord2 = "";
-
-    for (int i = 0; i < word1.length(); i++)
-        if (isKnownChar(word1[i]) == true)
-            correctedWord1 += word1[i];
-
-    for (int i = 0; i < word2.length(); i++)
-        if (isKnownChar(word2[i]) == true)
-            correctedWord2 += word2[i];
-
-    if (correctedWord1.length() != correctedWord2.length())
-        return 0;
-    else
-    {
-        float matchCorrectness = 0;
-
-        for (int i = 0; i < correctedWord1.length(); i++)
-        {
-            if (correctedWord1[i] == correctedWord2[i])
-                matchCorrectness++;
-        }
-        return matchCorrectness / correctedWord1.length() * 100.f;
-    }
-}
-
-void collectData()
+void readScrapedBase()
 {
     ifstream cryptoScrapedBase(tempCrypto + "cryptocurrencyScrapedBase.txt");
     {
         if (!cryptoScrapedBase.fail())
         {
-            char ch = '0';
-            string text = "";
-            int part = 0;
-            int id = 0;
-            string price = "";
-            string prizeChange24h = "";
-            string typee = "";
+            static char ch = '0';
+            static string text = "";
+            static int part = 0;
+            static int id = 0;
+            static string price = "";
+            static string prizeChange24h = "";
+            static string typee = "";
 
             while (cryptoScrapedBase >> ch)
             {
                 text += ch;
 
-                if ((int)ch == -96) {
-                    part = 4;
-                }
-
+                if ((int)ch == -96) part = 4;
+                
                 if (part == 0)
                 {
                     for (int i = 0; i <= cryptoBaseSize; i++)
@@ -439,7 +449,12 @@ void collectData()
                     }
                     else
                     {
-                        cryptoBase[id].price = (double)atof(price.c_str());
+                        istringstream(price) >> (double)cryptoBase[id].price;
+
+                        cout << "double " << (double)cryptoBase[id].price << endl;
+                        cout << "string " << price << endl;
+                        cout << endl;
+
                         part = 3;
                     }
                 }
@@ -472,46 +487,36 @@ void collectData()
     return;
 }
 
-struct localDateStruct
+void readCryptoBaseFile()
 {
-    string year = "";
-    string month = "";
-    string day = "";
-
-}localDate;
-
-const string currentDateTime()
-{
-    time_t     now = time(0);
-    struct tm  tstruct;
-    char       buf[80];
-    tstruct = *localtime(&now);
-    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
-    return buf;
-}
-
-void getData()
-{
-    const string dataTime = currentDateTime();
-    static int tf = 0;
-
-    for (int i = 0; i < dataTime.length(); i++)
+    ifstream if_cryptoBaseTxtFile(tempCrypto + "cryptocurrencyBase.txt");
     {
-        if (dataTime[i] == '-' || dataTime[i] == '.') tf++;
-        else
+        if (!if_cryptoBaseTxtFile.fail())
         {
-            if (tf == 0) localDate.year += dataTime[i];
-            if (tf == 1) localDate.month += dataTime[i];
-            if (tf == 2) localDate.day += dataTime[i];
+            while (if_cryptoBaseTxtFile >> grab.symbol)
+            {
+                if_cryptoBaseTxtFile >> grab.description;
+
+                cryptoBase[cryptoBaseSize].symbol = grab.symbol;
+                cryptoBase[cryptoBaseSize].description = grab.description;
+
+                cryptoBaseTxt += grab.symbol + " " + grab.description + " ";
+
+                cryptoBaseSize++;
+            }
         }
-    }
+    } if_cryptoBaseTxtFile.close();
+
+    return;
 }
 
 void refresh()
 {
-    system_command(("start " + dataScraperLoc).c_str());
-    collectData();
+    if (cHashPath == false) return;
 
+    system_command(("start " + dataScraperLoc).c_str());
+    readScrapedBase();
+    /*
     if (cryptoBase[cryptoBaseSize].price != 0.f)
     {
 #ifdef _DEBUG
@@ -522,8 +527,11 @@ void refresh()
         cout << "Data collected failed." << endl;
 #endif
     }
+    */
     nextRefresh = clock() + autoRefreshTime * 1000;
     lastRefresh = clock();
+
+    return;
 }
 
 void takeProfit()
@@ -540,6 +548,80 @@ void takeProfit()
             }
         }
     }
+
+    return;
+}
+
+void getPlace()
+{
+    ifstream placeTxt(tempCrypto + "place.txt");
+    {
+        if (!placeTxt.fail())
+        {
+            placeTxt >> dataScraperLoc;
+            cHashPath = true;
+        }
+#ifdef _DEBUG
+        else cout << tempCrypto << "couldn't find C#App path " << endl;
+#endif
+    } placeTxt.close();
+
+    return;
+}
+
+void printMoney(double money)
+{
+    if (money > 999)
+    {
+        Text((to_string((int)(money / 1000)) + "k $").c_str());
+    }
+    else if (money > 0.0001)
+    {
+        Text((to_string((float)money) + " $").c_str());
+    }
+    else Text((to_string((double)money) + " $").c_str());
+
+    if (IsItemHovered())
+    {
+        BeginTooltip();
+        PushTextWrapPos(GetFontSize() * 35.0f);
+        TextUnformatted((to_string(money) + "$").c_str());
+        PopTextWrapPos();
+        EndTooltip();
+    }
+
+    return;
+}
+void printType(string str)
+{
+    ImVec4 color = (ImVec4)ImColor::HSV(0.304f, 0.936f, 0.495f, 0.9f);
+
+    if (str == "Coin") color = (ImVec4)ImColor::HSV(0.2f, 1.f, 0.75f, 0.9f);
+
+    TextColored(color, str.c_str());
+
+    return;
+}
+void printAmmount(double ammount)
+{
+    if (ammount >= 100000)
+    {
+        Text((to_string((int)(ammount / 100000.f)) + "mln").c_str());
+    }
+    else if (ammount >= 1000)
+    {
+        Text((to_string((int)(ammount / 1000.f)) + "k").c_str());
+    }
+    else Text(to_string((double)ammount).c_str());
+    
+    if (IsItemHovered())
+    {
+        BeginTooltip();
+        PushTextWrapPos(GetFontSize() * 35.0f);
+        TextUnformatted((to_string(ammount)).c_str());
+        PopTextWrapPos();
+        EndTooltip();
+    }
     return;
 }
 
@@ -547,14 +629,19 @@ int main(int, char**)
 {
 #ifdef _DEBUG
     ShowWindow(GetConsoleWindow(), SW_SHOW);
+    cout << fixed;
 #else
     ShowWindow(GetConsoleWindow(), SW_HIDE);
-#endif // _DEBUG
-
+#endif
     bool appRunning = true;
-    
-    getData();
-    if (atof(localDate.year.c_str()) >= 2021 && atof(localDate.month.c_str()) >= 6 && atof(localDate.day.c_str()) >= 0) appRunning == false;
+
+    /*
+    getDataTime();
+    dateExp = { "10", "23", "2021" };
+    if (atof(localDate.year.c_str()) >= (int)(dateExp.year.c_str()) &&
+        atof(localDate.month.c_str()) >= (int)(dateExp.month.c_str()) &&
+        atof(localDate.day.c_str()) >= (int)(dateExp.day.c_str())) appRunning = false;
+    */
 
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("ImGui"), NULL };
     ::RegisterClassEx(&wc);
@@ -567,10 +654,6 @@ int main(int, char**)
         return 1;
     }
 
-    for (int i = 0; i < 999; i++)
-    {
-        blockchain[i] = 1;
-    }
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
 
@@ -581,48 +664,27 @@ int main(int, char**)
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX9_Init(g_pd3dDevice);
 
-    ifstream placeTxt(tempCrypto + "place.txt");
+    ifstream tempCryptoCheck(tempCrypto);
     {
-        if (!placeTxt.fail())
+        if (tempCryptoCheck.fail())
         {
-            placeTxt >> dataScraperLoc;
+            mkdir(tempCrypto.c_str()); // create crpyto folder in temp
         }
-        else
-        {
-            
-        }
-    } placeTxt.close();
-    print("dataScraperLoc" + dataScraperLoc);
+    } tempCryptoCheck.close();
 
-    ifstream if_cryptoBaseTxtFile(tempCrypto + "cryptocurrencyBase.txt");
-    {
-        if (!if_cryptoBaseTxtFile.fail())
-        {
-            while (if_cryptoBaseTxtFile >> grab.symbol)
-            {
-                if_cryptoBaseTxtFile >> grab.description;
-      
-                cryptoBase[cryptoBaseSize].symbol = grab.symbol;
-                cryptoBase[cryptoBaseSize].description = grab.description;
+    getPlace(); // get refresh path
 
-                cryptoBaseSize++;
+    readCryptoBaseFile(); // other users will have other
 
-                cryptoBaseTxt += grab.symbol + " " + grab.description + " ";
-            }
-        }
-        else addError("cryptoBaseTxtFile.fail()");
-    }
-    if_cryptoBaseTxtFile.close();
+    updateSettings(); // load settings from file
 
-    refresh();
-    collectData();
-    updateSettings();
-    setDefulUser();
-    updateUsersCrypto();
+   // refresh();
+   // readScrapedBase();
+    usersLoad();
 
-    string dataAnalysis = "NULL";
-    bool dataAnalysisWin = false;
-    int dataAnalysisI = NULL;
+    static string dataAnalysis = "NULL";
+    static bool dataAnalysisWin = false;
+    static int dataAnalysisI = NULL;
 
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse;
     static ImGuiTextFilter filter;
@@ -634,8 +696,7 @@ int main(int, char**)
         {
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
-            if (msg.message == WM_QUIT)
-                appRunning = false;
+            if (msg.message == WM_QUIT) appRunning = false;
         }
 
         ImGui_ImplDX9_NewFrame();
@@ -646,7 +707,6 @@ int main(int, char**)
 
             Begin("Cryptocurrency analysis", NULL, window_flags);
             {
-                if (CollapsingHeader("Wallet", ImGuiTreeNodeFlags_None))
                 {
                     user.totalSaldo = user.saldo;
 
@@ -657,107 +717,25 @@ int main(int, char**)
 
                     Text("User saldo:");
                     SameLine();
-                    if (user.saldo > 999) {
-
-                        Text(("$" + to_string((int)(user.saldo / 1000)) + "k").c_str());
-                        if (IsItemHovered())
-                        {
-                            BeginTooltip();
-                            PushTextWrapPos(GetFontSize() * 35.0f);
-                            TextUnformatted(to_string(user.saldo).c_str());
-                            PopTextWrapPos();
-                            EndTooltip();
-                        }
-                    }
-                    else
-                    {
-                        Text((to_string((int)user.saldo) + "$").c_str());
-                    }
+                    printMoney(user.saldo);
 
                     SameLine();
                     user.score = (int)(user.totalSaldo - 100000);
                     Text(("| Score: " + to_string(user.score)).c_str());
-
+                    /*
                     SameLine();
                     user.bestScore = user.bestScore = max(user.bestScore, (int)(user.totalSaldo - 100000));
                     Text(("| Best score: " + to_string(user.score)).c_str());
-
+                    */
+                    /*
+                    SameLine();
+                    Text(("| User: " + user.login).c_str());
+                    */
                     SameLine();
                     Text(("| Total saldo: " + to_string((int)(user.totalSaldo))).c_str());
 
                     SameLine();
                     if (Button("Reset score")) resetScore();
-
-                    SameLine();
-                    if (Button("take profit"))  takeProfit();
-
-                    if (BeginTable("tablee", 6, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(700, 100)))
-                    {
-                        TableSetupColumn("Description");
-                        TableSetupColumn("Ammount");
-                        TableSetupColumn("Market value");
-                        TableSetupColumn("Curr. price");
-                        TableSetupColumn("24h %");
-                        TableSetupColumn("dasd");
-
-                        TableHeadersRow();
-                    }
-
-                    for (int i = 0; i < 999; i++)
-                    {
-                        if (user.crypto.total[i] > 0)
-                        {
-                            TableNextRow();
-                            {
-                                TableNextColumn(); // Description
-                                {
-                                    Text((cryptoBase[i].description).c_str());
-                                }
-                                TableNextColumn(); // Ammount
-                                {
-                                    if(user.crypto.owend[i] > 0)
-                                        Text(to_string((int)user.crypto.owend[i]).c_str());
-                                    else
-                                        Text(to_string((float)user.crypto.owend[i]).c_str());
-                                }
-                                TableNextColumn(); // Value
-                                {
-                                    Text(to_string((int)user.crypto.total[i]).c_str());
-                                }
-                                TableNextColumn(); // Curr. price
-                                {
-                                    Text(to_string((int)cryptoBase[i].price).c_str());
-                                }
-                                TableNextColumn(); // prizeChange24h
-                                {
-                                    Text((cryptoBase[i].prizeChange24h).c_str());
-                                }
-                                TableNextColumn(); // imp
-                                {
-                                    Text((to_string((int)(user.crypto.total[i] / totalSaldo * 100.f)) + "%").c_str());
-                                }
-                                /*
-                                { // amount
-                                    SameLine();
-                                    Text(("amount: " + to_string((int)user.crypto.owend[i]) + ",").c_str());
-                                }
-                                { // total
-                                    SameLine();
-                                    Text(("value: " + to_string((int)user.crypto.total[i]) + "$,").c_str());
-                                }
-                                { // total
-                                    SameLine();
-                                    Text(("imp: " + to_string((int)(user.crypto.total[i] * 100.f / totalSaldo)) + "").c_str());
-                                }
-                                */
-                            }
-                        }
-                    }
-                    EndTable();
-                }
-
-                if (CollapsingHeader("Cryptocurrency base", ImGuiTreeNodeFlags_None))
-                {
                     Checkbox("Edit", &edit);
 
                     SameLine();
@@ -780,12 +758,21 @@ int main(int, char**)
                         Text(("(Auto refresh " + to_string(autoRefreshText) + "s)").c_str());
                     }
                     else nextRefresh = clock() + autoRefreshTime * 1000;
-                    
-                    if (BeginTable("table", 9, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(700, 100)))
+
+                    SameLine();
+                    Checkbox("Only owned", &ownedF);
+
+                    SameLine();
+                    PushItemWidth(80);
+                    Combo("<- Sort by", &sortBy, "\0Price\0Change%24h\0total\0");
+
+                    if (BeginTable("table", 11, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(700, 175)))
                     {
                         TableSetupColumn("Symbol");
                         TableSetupColumn("Description");
                         TableSetupColumn("Blockchain");
+                        TableSetupColumn("Owned");
+                        TableSetupColumn("Total");
 
                         TableSetupColumn("$ Price $");
                         TableSetupColumn("24h % Change");
@@ -811,6 +798,14 @@ int main(int, char**)
                             PushItemWidth(125);
                             Combo("b", &blockchain[999], blockchains, IM_ARRAYSIZE(blockchains));
                             if (blockchain[999] == 0) blockchainWin = true;
+                        }
+                        TableNextColumn(); // owned
+                        {
+
+                        }
+                        TableNextColumn(); // total
+                        {
+
                         }
                         TableNextColumn(); // price
                         {
@@ -899,141 +894,148 @@ int main(int, char**)
 
                     for (int i = 0; i < cryptoBaseSize; i++)
                     {
-                        if (filter.PassFilter(cryptoBase[i].symbol.c_str()) || filter.PassFilter(cryptoBase[i].description.c_str()))
-                        {
-                            for (int j = 0; j < cryptoBase[i].description.length(); j++) cryptoBaseDescription[i][j] = cryptoBase[i].description[j];
-                            for (int j = 0; j < (cryptoBase[i].symbol).length(); j++) cryptoBaseSymbol[i][j] = (cryptoBase[i].symbol)[j];
-
-                            TableNextRow();
+                        if( user.crypto.owend[i] > 0.f && ownedF == true || ownedF == false)
+                        { 
+                            if (filter.PassFilter(cryptoBase[i].symbol.c_str()) || filter.PassFilter(cryptoBase[i].description.c_str()))
                             {
-                                if (edit == 0)
+                                for (int j = 0; j < cryptoBase[i].description.length(); j++) cryptoBaseDescription[i][j] = cryptoBase[i].description[j];
+                                for (int j = 0; j < (cryptoBase[i].symbol).length(); j++) cryptoBaseSymbol[i][j] = (cryptoBase[i].symbol)[j];
+
+                                TableNextRow();
                                 {
-                                    TableNextColumn(); // Symbol
+                                    if (edit == 0)
                                     {
-                                        if (Button(cryptoBase[i].symbol.c_str()))
+                                        TableNextColumn(); // Symbol
                                         {
-                                            if (dataAnalysisWin == false) dataAnalysisWin = !dataAnalysisWin;
-
-                                            dataAnalysis = cryptoBase[i].description + " (" + cryptoBase[i].symbol + ") - Data analysis";
-                                            dataAnalysisI = i;
-                                        }
-                                    }
-                                    TableNextColumn(); // Description
-                                    {
-                                        Text(cryptoBaseDescription[i]);
-                                    }
-                                    TableNextColumn(); // Blockchain
-                                    {
-                                        /*
-                                        Combo(("b" + to_string(i)).c_str(), &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
-                                        if (blockchain[i] == 0) blockchainWin = true;
-                                        */
-                                    }
-                                    TableNextColumn(); // $ Price $
-                                    {
-                                        if (cryptoBase[i].price > 999)
-                                        {
-                                            Text(("$" + to_string((int)(cryptoBase[i].price / 1000)) + "k").c_str());
-
-                                            if (IsItemHovered())
+                                            if (Button(cryptoBase[i].symbol.c_str()))
                                             {
-                                                BeginTooltip();
-                                                PushTextWrapPos(GetFontSize() * 35.0f);
-                                                TextUnformatted(to_string(cryptoBase[i].price).c_str());
-                                                PopTextWrapPos();
-                                                EndTooltip();
+                                                if (dataAnalysisWin == false) dataAnalysisWin = !dataAnalysisWin;
+
+                                                dataAnalysis = cryptoBase[i].description + " (" + cryptoBase[i].symbol + ") - Data analysis";
+                                                dataAnalysisI = i;
                                             }
                                         }
-                                        else Text(to_string((float)cryptoBase[i].price).c_str());
-                                    }
-                                    TableNextColumn(); // 24h prize change
-                                    {
-                                        if (cryptoBase[i].isIncrese)
-                                            TextColored(((ImVec4)ImColor::HSV((float)(cryptoBase[i].alertLevel / 100.f * 0.3), 1.00f, 1.00f, 1)), ("+" + (cryptoBase[i].prizeChange24h)).c_str());
-                                        else
-                                            TextColored(((ImVec4)ImColor::HSV((float)(cryptoBase[i].alertLevel / 100.f * 0.3), 1.00f, 1.00f, 1)), ("-" + (cryptoBase[i].prizeChange24h)).c_str());
-                                    }
-                                    TableNextColumn(); // Search results
-                                    {
-                                        Text(cryptoBase[i].SearchResults.c_str());
-                                    }
-                                    TableNextColumn(); // type
-                                    {
-                                        Text(cryptoBase[i].typee.c_str());
-                                    }
-                                    /*
-                                    TableNextColumn(); // add / delete
-                                    {
-
-                                    }*/
-                                }
-                                else if (edit == 1)
-                                {
-                                    TableNextColumn(); // Symbol
-                                    {
-                                        PushItemWidth(80);
-                                        InputText((" " + to_string(i)).c_str(), cryptoBaseSymbol[i], IM_ARRAYSIZE(cryptoBaseSymbol[i]));
-                                    }
-                                    TableNextColumn(); // Description
-                                    {
-                                        PushItemWidth(80);
-                                        InputText(to_string(i).c_str(), cryptoBaseDescription[i], IM_ARRAYSIZE(cryptoBaseDescription[i]));
-                                    }
-                                    TableNextColumn(); // Blockchain
-                                    {
-                                        PushItemWidth(125);
-                                        Combo("Blockchain", &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
-                                        if (blockchain[i] == 0) blockchainWin = true;
-                                    }
-                                    TableNextColumn(); // $ Price $
-                                    {
-                                        TextDisabled(to_string((double)cryptoBase[i].price).c_str());
-                                    }
-                                    TableNextColumn(); // 24h prize change
-                                    {
-                                        TextDisabled(cryptoBase[i].prizeChange24h.c_str());
-                                    }
-                                    TableNextColumn(); // Search results
-                                    {
-                                        TextDisabled(cryptoBase[i].SearchResults.c_str());
-                                    }
-                                    TableNextColumn(); // Type
-                                    {
-                                        TextDisabled(cryptoBase[i].typee.c_str());
-                                    }
-                                    TableNextColumn(); // Add / Delete
-                                    {
-                                        PushID(i);
-                                        PushStyleColor(ImGuiCol_Button, redColor);
-                                        PushStyleColor(ImGuiCol_ButtonHovered, redColor);
-                                        PushStyleColor(ImGuiCol_ButtonActive, redColor);
-
-                                        if (Button(("Delete no." + to_string(i)).c_str()))
+                                        TableNextColumn(); // Description
                                         {
-                                            deleteCrypto(i);
-                                            ofstream of_cryptoBaseTxtFile(tempCrypto + "cryptocurrencyBase.txt");
-                                            {
-                                                if (!of_cryptoBaseTxtFile.fail())
-                                                {
-                                                    cryptoBaseTxt = "";
-                                                    for (int i = 0; i < cryptoBaseSize; i++)
-                                                    {
-                                                        cryptoBaseTxt += cryptoSymbol;
-                                                        cryptoBaseTxt += " ";
-                                                        cryptoBaseTxt += cryptoDescription;
-                                                        cryptoBaseTxt += " ";
-                                                    }
-                                                    of_cryptoBaseTxtFile << cryptoBaseTxt;
-                                                }
-                                            } of_cryptoBaseTxtFile.close();
+                                            Text(cryptoBaseDescription[i]);
                                         }
-                                        PopStyleColor(3);
-                                        PopID();
+                                        TableNextColumn(); // Blockchain
+                                        {
+                                            /*
+                                            Combo(("b" + to_string(i)).c_str(), &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
+                                            if (blockchain[i] == 0) blockchainWin = true;
+                                            */
+                                        }
+                                        TableNextColumn(); // owned
+                                        {
+                                            printAmmount(user.crypto.owend[i]);
+                                        }
+                                        TableNextColumn(); // $ total $
+                                        {
+                                            printMoney(user.crypto.total[i]);
+                                        }
+                                        TableNextColumn(); // $ Price $
+                                        {
+                                            printMoney(cryptoBase[i].price);
+                                        }
+                                        TableNextColumn(); // 24h prize change
+                                        {
+                                            if (cryptoBase[i].isIncrese)
+                                                TextColored(((ImVec4)ImColor::HSV((float)(cryptoBase[i].alertLevel.top / 100.f * 0.3), 1.00f, 1.00f, 1)), ("+" + (cryptoBase[i].prizeChange24h)).c_str());
+                                            else
+                                                TextColored(((ImVec4)ImColor::HSV((float)(cryptoBase[i].alertLevel.top / 100.f * 0.3), 1.00f, 1.00f, 1)), ("-" + (cryptoBase[i].prizeChange24h)).c_str());
+                                        }
+                                        TableNextColumn(); // Search results
+                                        {
+                                            Text(cryptoBase[i].SearchResults.c_str());
+                                        }
+                                        TableNextColumn(); // type
+                                        {
+                                            //    Text(cryptoBase[i].typee.c_str());
+                                            printType(cryptoBase[i].typee);
+                                        }
+                                        /*
+                                        TableNextColumn(); // add / delete
+                                        {
+
+                                        }*/
+                                    }
+                                    else if (edit == 1)
+                                    {
+                                        TableNextColumn(); // Symbol
+                                        {
+                                            PushItemWidth(80);
+                                            InputText((" " + to_string(i)).c_str(), cryptoBaseSymbol[i], IM_ARRAYSIZE(cryptoBaseSymbol[i]));
+                                        }
+                                        TableNextColumn(); // Description
+                                        {
+                                            PushItemWidth(80);
+                                            InputText(to_string(i).c_str(), cryptoBaseDescription[i], IM_ARRAYSIZE(cryptoBaseDescription[i]));
+                                        }
+                                        TableNextColumn(); // Blockchain
+                                        {
+                                            PushItemWidth(125);
+                                            Combo("Blockchain", &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
+                                            if (blockchain[i] == 0) blockchainWin = true;
+                                        }
+                                        TableNextColumn(); // owned
+                                        {
+                                            printAmmount(user.crypto.owend[i]);
+                                        }
+                                        TableNextColumn(); // $ total $
+                                        {
+                                            printMoney(user.crypto.total[i]);
+                                        }
+                                        TableNextColumn(); // $ Price $
+                                        {
+                                            printMoney(cryptoBase[i].price);
+                                        }
+                                        TableNextColumn(); // 24h prize change
+                                        {
+                                            TextDisabled(cryptoBase[i].prizeChange24h.c_str());
+                                        }
+                                        TableNextColumn(); // Search results
+                                        {
+                                            TextDisabled(cryptoBase[i].SearchResults.c_str());
+                                        }
+                                        TableNextColumn(); // Type
+                                        {
+                                            TextDisabled(cryptoBase[i].typee.c_str());
+                                        }
+                                        TableNextColumn(); // Add / Delete
+                                        {
+                                            PushID(i);
+                                            PushStyleColor(ImGuiCol_Button, redColor);
+                                            PushStyleColor(ImGuiCol_ButtonHovered, redColor);
+                                            PushStyleColor(ImGuiCol_ButtonActive, redColor);
+
+                                            if (Button(("Delete no." + to_string(i)).c_str()))
+                                            {
+                                                deleteCrypto(i);
+                                                ofstream of_cryptoBaseTxtFile(tempCrypto + "cryptocurrencyBase.txt");
+                                                {
+                                                    if (!of_cryptoBaseTxtFile.fail())
+                                                    {
+                                                        cryptoBaseTxt = "";
+                                                        for (int i = 0; i < cryptoBaseSize; i++)
+                                                        {
+                                                            cryptoBaseTxt += cryptoSymbol;
+                                                            cryptoBaseTxt += " ";
+                                                            cryptoBaseTxt += cryptoDescription;
+                                                            cryptoBaseTxt += " ";
+                                                        }
+                                                        of_cryptoBaseTxtFile << cryptoBaseTxt;
+                                                    }
+                                                } of_cryptoBaseTxtFile.close();
+                                            }
+                                            PopStyleColor(3);
+                                            PopID();
+                                        }
                                     }
                                 }
+                                for (int j = 0; j < 120; j++) cryptoBase[i].description = cryptoBaseDescription[i];
+                                for (int j = 0; j < 120; j++) cryptoBase[i].symbol = cryptoBaseSymbol[i];
                             }
-                            for (int j = 0; j < 120; j++) cryptoBase[i].description = cryptoBaseDescription[i];
-                            for (int j = 0; j < 120; j++) cryptoBase[i].symbol = cryptoBaseSymbol[i];
                         }
                     }
                     EndTable();
@@ -1085,7 +1087,7 @@ int main(int, char**)
                             }
                             TableNextColumn(); // Misc
                             {
-                                Checkbox("Programing mode", &programing_mode);
+                                Checkbox("Programing mode", &programingMode);
                             }
                             TableNextColumn(); // Preferences
                             {
@@ -1163,7 +1165,18 @@ int main(int, char**)
                     Spacing();
                 }
 
-                if(colorTool == true && programing_mode == true)
+                if (CollapsingHeader("Account", ImGuiTreeNodeFlags_None))
+                {
+                    {
+                        Text(("User : " + user.login).c_str());
+                        SameLine();
+                        Text(("Password : " + user.password).c_str());
+                        SameLine();
+                        Button("Change password");
+                    }
+                }
+
+                if(colorTool == true && programingMode == true)
                     if (CollapsingHeader("color", ImGuiTreeNodeFlags_None))
                     {
                         static ImVec4 color_hsv(0.23f, 1.0f, 1.0f, 1.0f); // Stored as HSV!
@@ -1175,9 +1188,60 @@ int main(int, char**)
                     Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / GetIO().Framerate, GetIO().Framerate);
             }
 
+            Begin("Login win", NULL, window_flags);
+            {
+                PushItemWidth(100);
+                InputText("Login", loginTI, IM_ARRAYSIZE(loginTI));
+
+                PushItemWidth(100);
+                InputText("password", passwordTI, IM_ARRAYSIZE(passwordTI), ImGuiInputTextFlags_Password);
+
+                static bool rememberMe = false;
+
+                Checkbox("Remember me", &rememberMe);
+
+                SameLine();
+
+                if (Button("> Login"))
+                {
+                    for (int i = 0; i < usersNum; i++)
+                    {
+                        if (users[i].login == loginTI && users[i].password == passwordTI)
+                        {
+                            user.login = loginTI;
+                            user.password = passwordTI;
+                            if (rememberMe == true) user.remember = true;
+
+                            usersSave();
+                            
+                            //    addError(("User" + user.login).c_str());
+                        }
+                    }
+                    
+                    for (int i = 0; i < 128; i++)
+                    {
+                        loginTI[i] = (char)0;
+                        passwordTI[i] = (char)0;
+                    }
+                }
+                
+                if (Button("Create new acc"))
+                {
+                    addUser(loginTI, passwordTI);
+
+                    for (int i = 0; i < 128; i++)
+                    {
+                        loginTI[i] = (char)0;
+                        passwordTI[i] = (char)0;
+                    }
+                }
+            }
+            End();
+
             if (autoSaveTime < clock())
             {
                 saveSettings();
+                usersSave();
 
                 autoSaveTime = clock() + (autoSaveDelay * 1000);
             }
@@ -1209,16 +1273,16 @@ int main(int, char**)
                 {
                     Text((cryptoBase[dataAnalysisI].description + " price ").c_str());
                     SameLine();
-                    Text((to_string((double)cryptoBase[dataAnalysisI].price) + "$").c_str());
+                    printMoney(cryptoBase[dataAnalysisI].price);
 
-                    if (TreeNode(("Alert level " + to_string((int)cryptoBase[dataAnalysisI].alertLevel) + "%").c_str()))
+                    if (TreeNode(("Alert level " + to_string((int)cryptoBase[dataAnalysisI].alertLevel.top) + "%").c_str()))
                     {
                         SameLine();
                         if (Button("Change value"))
                         {
                             string str(cryptoAlertLevel);
 
-                            cryptoBase[dataAnalysisI].alertLevel = std::stof(str);
+                            cryptoBase[dataAnalysisI].alertLevel.top = stof(str);
 
                             for (int i = 0; i < 127; i++) cryptoAlertLevel[i] = (int)0;
                         }
@@ -1234,12 +1298,14 @@ int main(int, char**)
                         SameLine();
                         if (Button("Buy "))
                         {
-                            if (atof(addAmount) * cryptoBase[dataAnalysisI].price < user.saldo)
+                            if (atof(addAmount) * cryptoBase[dataAnalysisI].price < user.saldo + 0.01)
                             {
                                 user.saldo -= atof(addAmount) * cryptoBase[dataAnalysisI].price;
                                 user.crypto.total[dataAnalysisI] += atof(addAmount) * cryptoBase[dataAnalysisI].price;
                                 user.crypto.owend[dataAnalysisI] += atof(addAmount) * 1.f;
-                                saveUsersCrypto();
+                                userSave(user);
+
+                             //   for (int i = 0; i < 128; i++) addAmount[i] = (char)0;
                             }
                             else addError("You dont own that much credits");
                         }
@@ -1250,7 +1316,7 @@ int main(int, char**)
                         SameLine();
                         if (Button("All"))
                         {
-                            for (int i = 0; i < to_string(cryptoBase[dataAnalysisI].price / user.saldo).length(); i++)
+                            for (int i = 0; i < to_string(user.saldo / cryptoBase[dataAnalysisI].price).length(); i++)
                             {
                                 addAmount[i] = (char)to_string(user.saldo / cryptoBase[dataAnalysisI].price)[i];
                             }
@@ -1265,22 +1331,25 @@ int main(int, char**)
                                 user.saldo += atof(sellAmount) * cryptoBase[dataAnalysisI].price;
                                 user.crypto.total[dataAnalysisI] -= atof(sellAmount) * cryptoBase[dataAnalysisI].price;
                                 user.crypto.owend[dataAnalysisI] -= atof(sellAmount) * 1.f;
-                                saveUsersCrypto();
+                                userSave(user);
+
+                               // for (int i = 0; i < 128; i++) sellAmount[i] = (char)0;
                             }
                             else addError("You dont own that much crypto");
                         }
                         
                         SameLine();
                         PushItemWidth(60);
-                        InputText("%", sellAmount, 64, ImGuiInputTextFlags_CharsDecimal);
+                        InputText("coins", sellAmount, 64, ImGuiInputTextFlags_CharsDecimal);
 
                         SameLine();
-                        if (Button("All"))
+                        if (Button("All "))
                         {
                             for (int i = 0; i < to_string(user.crypto.owend[dataAnalysisI]).length(); i++)
                             {
                                 sellAmount[i] = (char)to_string(user.crypto.owend[dataAnalysisI])[i];
                             }
+                            cout << user.crypto.owend[dataAnalysisI] << endl;
                         }
                         TreePop();
                     }

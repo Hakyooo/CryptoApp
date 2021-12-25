@@ -5,6 +5,8 @@ using System.Threading;
 using HtmlAgilityPack;
 using System.Runtime.InteropServices;
 
+using System.Diagnostics;
+
 namespace scraper
 {
     static class ConsoleExtension
@@ -12,14 +14,8 @@ namespace scraper
         readonly static IntPtr handle = GetConsoleWindow();
         [DllImport("kernel32.dll")] static extern IntPtr GetConsoleWindow();
         [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-        public static void Hide()
-        {
-            ShowWindow(handle, 0); //hide the console
-        }
-        public static void Show()
-        {
-            ShowWindow(handle, 5); //show the console
-        }
+        public static void Hide() { ShowWindow(handle, 0); }
+        public static void Show() { ShowWindow(handle, 5); }
     }
     class Program
     {
@@ -69,7 +65,6 @@ namespace scraper
 
             return doc.DocumentNode.SelectNodes("//*[@class=\"namePill\"]").First().InnerText;
         } // namePill  
-
         public static char gwenufiw()
         {
             HtmlWeb web = new HtmlWeb();
@@ -77,7 +72,6 @@ namespace scraper
            
              return doc.DocumentNode.SelectNodes("//*[@class=\"iXabQc vgpkr\"]").First().InnerText.ToCharArray()[0];
         }
-
         public static void sendMessage()
         {
             HtmlWeb web = new HtmlWeb();
@@ -88,6 +82,7 @@ namespace scraper
 
         static void Main(string[] args)
         {
+
 #if DEBUG
             ConsoleExtension.Show();    
 #else
@@ -100,7 +95,7 @@ namespace scraper
 
             if ((File.Exists(cryptoFile + "place.txt") ? "File exists." : "File does not exist.") == "File exists.")
             {
-              
+
             }
             else
             {
@@ -109,51 +104,54 @@ namespace scraper
                 placeTxtLoc.WriteLine(fullPath);
                 placeTxtLoc.Close();
             }
-            
+
             print("--------------------------");
-       //     print("gwenufiw " + gwenufiw());
+            //     print("gwenufiw " + gwenufiw());
             print("Test:  Bitcoin");
             print("Type:  " + getCryptoType("bitcoin"));
             print(getCryptoPrice("bitcoin"));
-       //     print("" + gwenufiw());
+            //     print("" + gwenufiw());
             print("--------------------------");
 
-            StreamReader readData = new StreamReader(cryptoFile + "cryptocurrencyBase.txt");
-            StreamWriter scapedData = new StreamWriter(cryptoFile + "cryptocurrencyScrapedBase.txt");
+            if ((File.Exists(cryptoFile + "cryptocurrencyBase.txt") ? "File exists." : "File does not exist.") == "File exists.")
             {
-                string symb = "", desc = "";
-                int turnFor = 0;
-                char ch;
-
-                do
+                StreamReader readData = new StreamReader(cryptoFile + "cryptocurrencyBase.txt");
+                StreamWriter scapedData = new StreamWriter(cryptoFile + "cryptocurrencyScrapedBase.txt");
                 {
-                    ch = (char)readData.Read();// print(ch + " | ASCI " + Convert.ToInt32(ch));
+                    string symb = "", desc = "";
+                    int turnFor = 0;
+                    char ch;
 
-                    if (Convert.ToInt32(ch) >= 97 && Convert.ToInt32(ch) <= 122 || // small letter
-                        Convert.ToInt32(ch) >= 65 && Convert.ToInt32(ch) <= 90) // big letters
+                    do
                     {
-                        if (turnFor == 0) symb += ch;
-                        else if (turnFor == 1) desc += ch;
-                    }
-                    else if (Convert.ToInt32(ch) == 32)
-                    {
-                        if (turnFor == 0)
-                        {
-                            turnFor = 1;
-                        }
-                        else if (turnFor == 1)
-                        {
-                            scapedData.WriteLine(symb + " " + getCryptoType(desc) + " " + getCryptoPrice(desc) + "+");
-                            turnFor = 0;
-                            desc = "";
-                            symb = "";
-                        }
-                    }
-                } while (!readData.EndOfStream);
+                        ch = (char)readData.Read();// print(ch + " | ASCI " + Convert.ToInt32(ch));
 
-                scapedData.Close();
-                readData.Close();
-                Thread.Sleep(1000);
+                        if (Convert.ToInt32(ch) >= 97 && Convert.ToInt32(ch) <= 122 || // small letter
+                            Convert.ToInt32(ch) >= 65 && Convert.ToInt32(ch) <= 90) // big letters
+                        {
+                            if (turnFor == 0) symb += ch;
+                            else if (turnFor == 1) desc += ch;
+                        }
+                        else if (Convert.ToInt32(ch) == 32)
+                        {
+                            if (turnFor == 0)
+                            {
+                                turnFor = 1;
+                            }
+                            else if (turnFor == 1)
+                            {
+                                scapedData.WriteLine(symb + " " + getCryptoType(desc) + " " + getCryptoPrice(desc) + "+");
+                                turnFor = 0;
+                                desc = "";
+                                symb = "";
+                            }
+                        }
+                    } while (!readData.EndOfStream);
+
+                    scapedData.Close();
+                    readData.Close();
+                    Thread.Sleep(1000);
+                }
             }
         }
     }

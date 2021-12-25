@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\mati\\Desktop\\CryptoApp\\data-scraper\\data_scraper\\data_scraper\\data_scraper.csproj": {}
+    "C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\data-scraper\\data_scraper\\data_scraper\\data_scraper.csproj": {}
   },
   "projects": {
-    "C:\\Users\\mati\\Desktop\\CryptoApp\\data-scraper\\data_scraper\\data_scraper\\data_scraper.csproj": {
+    "C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\data-scraper\\data_scraper\\data_scraper\\data_scraper.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\mati\\Desktop\\CryptoApp\\data-scraper\\data_scraper\\data_scraper\\data_scraper.csproj",
+        "projectUniqueName": "C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\data-scraper\\data_scraper\\data_scraper\\data_scraper.csproj",
         "projectName": "data_scraper",
-        "projectPath": "C:\\Users\\mati\\Desktop\\CryptoApp\\data-scraper\\data_scraper\\data_scraper\\data_scraper.csproj",
-        "packagesPath": "C:\\Users\\mati\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\mati\\Desktop\\CryptoApp\\data-scraper\\data_scraper\\data_scraper\\obj\\",
+        "projectPath": "C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\data-scraper\\data_scraper\\data_scraper\\data_scraper.csproj",
+        "packagesPath": "C:\\Users\\moolm\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\data-scraper\\data_scraper\\data_scraper\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\mati\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\moolm\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -26,6 +26,7 @@
         },
         "frameworks": {
           "netcoreapp3.1": {
+            "targetAlias": "netcoreapp3.1",
             "projectReferences": {}
           }
         },
@@ -37,6 +38,7 @@
       },
       "frameworks": {
         "netcoreapp3.1": {
+          "targetAlias": "netcoreapp3.1",
           "dependencies": {
             "HtmlAgilityPack": {
               "target": "Package",
@@ -58,7 +60,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.201\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.203\\RuntimeIdentifierGraph.json"
         }
       }
     }
