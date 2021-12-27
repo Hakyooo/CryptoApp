@@ -17,21 +17,11 @@ namespace CryptoApp_Launcher
         public static void Hide() { ShowWindow(handle, 0); }
         public static void Show() { ShowWindow(handle, 5); }
     }
+
     class Program
     {
-        static void Main(string[] args)
+        static void system(string str)
         {
-#if DEBUG
-            ConsoleExtension.Show();
-#else
-            ConsoleExtension.Hide();
-#endif
-            string path2 = @"C:\Users\moolm\OneDrive\Documents\GitHub\CryptoApp";
-            string path3 = @"\data-scraper\data_scraper\data_scraper\bin\Release\netcoreapp3.1\data_scraper.exe";
-            string path4 = @"\imgui-master\examples\example_win32_directx9\Release\example_win32_directx9.exe";
-       //     string fullPath = Path.GetFullPath(path2 + path3);
-       //     Console.WriteLine(fullPath);
-
             Process cmd = new Process();
             cmd.StartInfo.FileName = "cmd.exe";
             cmd.StartInfo.RedirectStandardInput = true;
@@ -40,11 +30,28 @@ namespace CryptoApp_Launcher
             cmd.StartInfo.UseShellExecute = false;
             cmd.Start();
 
-            cmd.StandardInput.WriteLine("start " + path2 + path4);
+            cmd.StandardInput.WriteLine(str);
             cmd.StandardInput.Flush();
             cmd.StandardInput.Close();
             cmd.WaitForExit();
             Console.WriteLine(cmd.StandardOutput.ReadToEnd());
+        }
+
+        static void Main(string[] args)
+        {
+#if DEBUG
+            ConsoleExtension.Show();    
+#else
+            ConsoleExtension.Hide();
+#endif
+            string path2 = @"C:\Users\mati\Desktop\CryptoApp";
+            string path3 = @"\data-scraper\data_scraper\data_scraper\bin\Release\netcoreapp3.1\data_scraper.exe";
+            string path4 = @"\imgui-master\examples\example_win32_directx9\Release\example_win32_directx9.exe";
+
+            //     string fullPath = Path.GetFullPath(path2 + path3);
+            //     Console.WriteLine(fullPath);
+
+            system("start " + path2);
 
             Console.WriteLine("Hello World!");
         }

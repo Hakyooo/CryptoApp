@@ -8,19 +8,19 @@
     ".NETCoreApp,Version=v3.1": []
   },
   "packageFolders": {
-    "C:\\Users\\moolm\\.nuget\\packages\\": {}
+    "C:\\Users\\mati\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\CryptoApp-Launcher\\CryptoApp-Launcher\\CryptoApp-Launcher.csproj",
+      "projectUniqueName": "C:\\Users\\mati\\Desktop\\CryptoApp\\CryptoApp-Launcher\\CryptoApp-Launcher\\CryptoApp-Launcher.csproj",
       "projectName": "CryptoApp-Launcher",
-      "projectPath": "C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\CryptoApp-Launcher\\CryptoApp-Launcher\\CryptoApp-Launcher.csproj",
-      "packagesPath": "C:\\Users\\moolm\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\CryptoApp-Launcher\\CryptoApp-Launcher\\obj\\",
+      "projectPath": "C:\\Users\\mati\\Desktop\\CryptoApp\\CryptoApp-Launcher\\CryptoApp-Launcher\\CryptoApp-Launcher.csproj",
+      "packagesPath": "C:\\Users\\mati\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\mati\\Desktop\\CryptoApp\\CryptoApp-Launcher\\CryptoApp-Launcher\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\moolm\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\mati\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -32,7 +32,6 @@
       },
       "frameworks": {
         "netcoreapp3.1": {
-          "targetAlias": "netcoreapp3.1",
           "projectReferences": {}
         }
       },
@@ -44,7 +43,6 @@
     },
     "frameworks": {
       "netcoreapp3.1": {
-        "targetAlias": "netcoreapp3.1",
         "imports": [
           "net461",
           "net462",
@@ -60,7 +58,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.203\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.201\\RuntimeIdentifierGraph.json"
       }
     }
   }

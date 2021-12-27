@@ -1,0 +1,12 @@
+C:\Users\mati\Desktop\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\bin\Release\netcoreapp3.1\CryptoApp-Launcher.exe
+C:\Users\mati\Desktop\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\bin\Release\netcoreapp3.1\CryptoApp-Launcher.deps.json
+C:\Users\mati\Desktop\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\bin\Release\netcoreapp3.1\CryptoApp-Launcher.runtimeconfig.json
+C:\Users\mati\Desktop\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\bin\Release\netcoreapp3.1\CryptoApp-Launcher.runtimeconfig.dev.json
+C:\Users\mati\Desktop\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\bin\Release\netcoreapp3.1\CryptoApp-Launcher.dll
+C:\Users\mati\Desktop\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\bin\Release\netcoreapp3.1\CryptoApp-Launcher.pdb
+C:\Users\mati\Desktop\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\obj\Release\netcoreapp3.1\CryptoApp-Launcher.csproj.CoreCompileInputs.cache
+C:\Users\mati\Desktop\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\obj\Release\netcoreapp3.1\CryptoApp-Launcher.AssemblyInfoInputs.cache
+C:\Users\mati\Desktop\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\obj\Release\netcoreapp3.1\CryptoApp-Launcher.AssemblyInfo.cs
+C:\Users\mati\Desktop\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\obj\Release\netcoreapp3.1\CryptoApp-Launcher.dll
+C:\Users\mati\Desktop\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\obj\Release\netcoreapp3.1\CryptoApp-Launcher.pdb
+C:\Users\mati\Desktop\CryptoApp\CryptoApp-Launcher\CryptoApp-Launcher\obj\Release\netcoreapp3.1\CryptoApp-Launcher.genruntimeconfig.cache

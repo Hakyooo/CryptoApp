@@ -82,7 +82,6 @@ namespace scraper
 
         static void Main(string[] args)
         {
-
 #if DEBUG
             ConsoleExtension.Show();    
 #else
@@ -99,6 +98,8 @@ namespace scraper
             }
             else
             {
+                // move to temp
+
                 StreamWriter placeTxtLoc = new StreamWriter(cryptoFile + "place.txt");
                 string fullPath = Path.GetFullPath("data_scraper.exe");
                 placeTxtLoc.WriteLine(fullPath);
