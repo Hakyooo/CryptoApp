@@ -23,6 +23,7 @@ namespace CryptoApp_Launcher
         static void system(string str)
         {
             Process cmd = new Process();
+
             cmd.StartInfo.FileName = "cmd.exe";
             cmd.StartInfo.RedirectStandardInput = true;
             cmd.StartInfo.RedirectStandardOutput = true;
@@ -34,26 +35,67 @@ namespace CryptoApp_Launcher
             cmd.StandardInput.Flush();
             cmd.StandardInput.Close();
             cmd.WaitForExit();
-            Console.WriteLine(cmd.StandardOutput.ReadToEnd());
+        
+            //    Console.WriteLine(cmd.StandardOutput.ReadToEnd());
         }
 
-        static void Main(string[] args)
+        static string   cryptoAppPath = "";
+        const string    cHaszPath = @"\data-scraper\data_scraper\data_scraper\bin\Release\netcoreapp3.1\data_scraper.exe";
+        const string    cppPath = @"\imgui-master\examples\example_win32_directx9\Release\example_win32_directx9.exe";
+        static void checkPath(string str)
+        {
+            char[] strChared = str.ToCharArray(0, str.Length);
+            string fullPath = "";
+            string partOfPath = "";
+            string[] floderPaths = { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", }; // [128]
+            int currArray = 0;
+
+            for (int i = 0; i < str.Length; i++)
+            {
+            //    Console.Write(strChared[i]);
+
+                if (strChared[i] == (char)92) // mean next folder 
+                {
+                    Console.WriteLine("");
+
+                    floderPaths[currArray++] = partOfPath;
+                    Console.WriteLine("partOfPath : " + partOfPath);
+
+                    if ("CryptoApp" == partOfPath) cryptoAppPath = fullPath;
+                    
+                    partOfPath = "";
+                }
+                else
+                {
+                    partOfPath += strChared[i];
+                }
+                fullPath += strChared[i];
+            }
+            Console.WriteLine(cryptoAppPath);      
+        }
+
+static void Main(string[] args)
         {
 #if DEBUG
-            ConsoleExtension.Show();    
+            ConsoleExtension.Show();
 #else
             ConsoleExtension.Hide();
-#endif
-            string path2 = @"C:\Users\mati\Desktop\CryptoApp";
-            string path3 = @"\data-scraper\data_scraper\data_scraper\bin\Release\netcoreapp3.1\data_scraper.exe";
-            string path4 = @"\imgui-master\examples\example_win32_directx9\Release\example_win32_directx9.exe";
+#endif        
+            checkPath(Path.GetFullPath("CryptoApp-Launcher.exe"));
 
-            //     string fullPath = Path.GetFullPath(path2 + path3);
-            //     Console.WriteLine(fullPath);
+            if ((File.Exists((cryptoAppPath + @"\cryptoApp.exe")) ? "File exists." : "File does not exist.") == "File does not exist.")
+            {
+                System.IO.File.Copy((cryptoAppPath + cppPath), (cryptoAppPath + @"\cryptoApp.exe"), true);
 
-            system("start " + path2);
+                system("start" + cryptoAppPath + @"\cryptoApp.exe");
 
-            Console.WriteLine("Hello World!");
+                System.Environment.Exit(0);
+            }
+            else // "File exists."
+            {
+             //   system("start " + cryptoAppPath + @"\cryptoApp.exe");
+                system("start " + cryptoAppPath + cppPath);
+            }
         }
     }
 }
