@@ -20,7 +20,7 @@ namespace scraper
     class Program
     {
         public static void print(string text) { Console.WriteLine(text); }
-        public static String getCrypto2(string cryptocurrency)
+        public static String getCrypto(string cryptocurrency)
         {
             // Pl language https://coinmarketcap.com/pl/currencies/bitcoin";
             string link = "https://coinmarketcap.com/currencies/" + "cryptocurrency"; print("start " + link);
@@ -45,6 +45,8 @@ namespace scraper
 
             return doc.DocumentNode.SelectNodes("//*[@class=\"sc-16r8icm-0 kjciSH priceSection\"]").First().InnerText;
         }
+
+        static string currency; // = "Dollar" / "Zloty"
         public static String getCryptoPrice(string cryptocurrency)
         {
             // Pl language https://coinmarketcap.com/pl/currencies/bitcoin";
@@ -54,7 +56,7 @@ namespace scraper
             HtmlDocument doc = web.Load(link);
 
             return doc.DocumentNode.SelectNodes("//*[@class=\"imn55z-0 hCqbVS price\"]").First().InnerText;
-        }  // sc-16r8icm-0 sc-1etv19d-4 iQGGZq
+        }
         public static String getCryptoType(string cryptocurrency)
         {
             // Pl language https://coinmarketcap.com/pl/currencies/bitcoin";
@@ -80,6 +82,7 @@ namespace scraper
             doc.DocumentNode.SelectNodes("//*[@class=\"iXabQc vgpkr\"]");
         }
 
+        
         static void Main(string[] args)
         {
 #if DEBUG
@@ -89,17 +92,23 @@ namespace scraper
 #endif
             string tmpFile = System.IO.Path.GetTempPath();
             string cryptoFile = tmpFile + "Crypto\\";
-            string kchashFile = cryptoFile + "kchash.txt";
-            string kcppFile = cryptoFile + "kcpp.txt";
+
+            if ((File.Exists(cryptoFile + "cHaszScraper") ? "File exists." : "File does not exist.") == "File does not exist.")
+            {
+                System.IO.File.Copy((Path.GetFullPath("data_scraper.exe")), (cryptoFile + "data_scraper.exe"), true);
+            }
+            else
+            {
+
+            }
+
 
             if ((File.Exists(cryptoFile + "place.txt") ? "File exists." : "File does not exist.") == "File exists.")
             {
 
             }
             else
-            {
-                // move to temp
-
+            { 
                 StreamWriter placeTxtLoc = new StreamWriter(cryptoFile + "place.txt");
                 string fullPath = Path.GetFullPath("data_scraper.exe");
                 placeTxtLoc.WriteLine(fullPath);
@@ -123,8 +132,7 @@ namespace scraper
                     int turnFor = 0;
                     char ch;
 
-                    do
-                    {
+                    do {
                         ch = (char)readData.Read();// print(ch + " | ASCI " + Convert.ToInt32(ch));
 
                         if (Convert.ToInt32(ch) >= 97 && Convert.ToInt32(ch) <= 122 || // small letter
@@ -135,16 +143,12 @@ namespace scraper
                         }
                         else if (Convert.ToInt32(ch) == 32)
                         {
-                            if (turnFor == 0)
-                            {
-                                turnFor = 1;
-                            }
+                            if (turnFor == 0) turnFor = 1;
                             else if (turnFor == 1)
                             {
                                 scapedData.WriteLine(symb + " " + getCryptoType(desc) + " " + getCryptoPrice(desc) + "+");
-                                turnFor = 0;
-                                desc = "";
-                                symb = "";
+                                
+                                turnFor = 0; desc = ""; symb = "";
                             }
                         }
                     } while (!readData.EndOfStream);
@@ -157,63 +161,3 @@ namespace scraper
         }
     }
 }
-/*
- 
-    if (ImGui::TreeNode("Buy/Sell"))
-                    {
-                        ImGui::SameLine();
-                        if (ImGui::Button("Buy "))
-                        {
-                            if (atof(addAmount) * cryptoBase[dataAnalysisI].price < user.saldo)
-                            {
-                                user.saldo -= atof(addAmount) * cryptoBase[dataAnalysisI].price;
-                                user.crypto.total[dataAnalysisI] += atof(addAmount) * cryptoBase[dataAnalysisI].price;
-                                user.crypto.owend[dataAnalysisI] += atof(addAmount) * 1.f;
-                                saveUsersCrypto();
-                            }
-                            else addError("You dont own that much credits");
-                        }
-                        ImGui::SameLine();
-                        ImGui::PushItemWidth(60);
-                        ImGui::InputText("or", addAmount, 64, ImGuiInputTextFlags_CharsDecimal);
-
-                        ImGui::SameLine();
-                        if (ImGui::Button("All"))
-                        {
-                            for (int i = 0; i < to_string(cryptoBase[dataAnalysisI].price / user.saldo).length(); i++)
-                            {
-                                addAmount[i] = (char)to_string(cryptoBase[dataAnalysisI].price / user.saldo)[i];
-                            }
-                        }
-
-                        ImGui::SameLine();
-
-                        if (ImGui::Button("Sell"))
-                        {
-                            if (atof(sellAmount) <= user.crypto.owend[dataAnalysisI])
-                            {
-                                user.saldo += atof(sellAmount) * cryptoBase[dataAnalysisI].price;
-                                user.crypto.total[dataAnalysisI] -= atof(sellAmount) * cryptoBase[dataAnalysisI].price;
-                                user.crypto.owend[dataAnalysisI] -= atof(sellAmount) * 1.f;
-                                saveUsersCrypto();
-                            }
-                            else addError("You dont own that much crypto");
-                        }
-                        
-                        ImGui::SameLine();
-                        ImGui::PushItemWidth(60);
-                        ImGui::InputText("%%%", sellAmount, 64, ImGuiInputTextFlags_CharsDecimal);
-
-                        ImGui::SameLine();
-                        if (ImGui::Button("All"))
-                        {
-                            for (int i = 0; i < to_string(user.crypto.owend[dataAnalysisI]).length(); i++)
-                            {
-                                sellAmount[i] = (char)to_string(user.crypto.owend[dataAnalysisI])[i];
-                            }
-                        }
-                        ImGui::TreePop();
-                    }
-
-
-    */

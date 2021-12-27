@@ -234,6 +234,10 @@ void usersSave()
     {
         userSave(users[j]);
     }
+    ofstream userCrypto(tempCrypto + "userCrypto.txt");
+    userCrypto << usersNum << endl;
+    userCrypto.close();
+
     return;
 }
 
@@ -268,6 +272,10 @@ void usersLoad()
     {
         userLoad(users[i]);
     }
+    ifstream userCrypto(tempCrypto + "userCrypto.txt");
+    userCrypto >> usersNum;
+    userCrypto.close();
+
     return;
 }
 
@@ -516,7 +524,7 @@ void refresh()
 
     system_command(("start " + dataScraperLoc).c_str());
     readScrapedBase();
-    /*
+    
     if (cryptoBase[cryptoBaseSize].price != 0.f)
     {
 #ifdef _DEBUG
@@ -527,7 +535,6 @@ void refresh()
         cout << "Data collected failed." << endl;
 #endif
     }
-    */
     nextRefresh = clock() + autoRefreshTime * 1000;
     lastRefresh = clock();
 
@@ -630,6 +637,7 @@ int main(int, char**)
 #ifdef _DEBUG
     ShowWindow(GetConsoleWindow(), SW_SHOW);
     cout << fixed;
+    cout << tempCrypto;
 #else
     ShowWindow(GetConsoleWindow(), SW_HIDE);
 #endif
@@ -672,6 +680,17 @@ int main(int, char**)
         }
     } tempCryptoCheck.close();
 
+    static bool loginWinShow;
+    static bool mainWinShow;
+
+    userSetDefult(user);
+    usersLoad();
+    if (usersNum == 0)
+    {
+        mainWinShow = false;
+        loginWinShow = true;
+    }
+
     getPlace(); // get refresh path
 
     readCryptoBaseFile(); // other users will have other
@@ -680,7 +699,6 @@ int main(int, char**)
 
    // refresh();
    // readScrapedBase();
-    usersLoad();
 
     static string dataAnalysis = "NULL";
     static bool dataAnalysisWin = false;
@@ -705,538 +723,544 @@ int main(int, char**)
         {    
             ShowDemoWindow();
 
-            Begin("Cryptocurrency analysis", NULL, window_flags);
+            if (mainWinShow == true)
             {
+                Begin("Cryptocurrency analysis", NULL, window_flags);
                 {
-                    user.totalSaldo = user.saldo;
-
-                    for (int i = 0; i < 999; i++)
                     {
-                        user.totalSaldo += user.crypto.owend[i] * cryptoBase[i].price;
-                    }
+                        user.totalSaldo = user.saldo;
 
-                    Text("User saldo:");
-                    SameLine();
-                    printMoney(user.saldo);
+                        for (int i = 0; i < 999; i++)
+                        {
+                            user.totalSaldo += user.crypto.owend[i] * cryptoBase[i].price;
+                        }
 
-                    SameLine();
-                    user.score = (int)(user.totalSaldo - 100000);
-                    Text(("| Score: " + to_string(user.score)).c_str());
-                    /*
-                    SameLine();
-                    user.bestScore = user.bestScore = max(user.bestScore, (int)(user.totalSaldo - 100000));
-                    Text(("| Best score: " + to_string(user.score)).c_str());
-                    */
-                    /*
-                    SameLine();
-                    Text(("| User: " + user.login).c_str());
-                    */
-                    SameLine();
-                    Text(("| Total saldo: " + to_string((int)(user.totalSaldo))).c_str());
-
-                    SameLine();
-                    if (Button("Reset score")) resetScore();
-                    Checkbox("Edit", &edit);
-
-                    SameLine();
-                    filter.Draw("<- Search", 200);
-
-                    SameLine();
-                    if (Button("Refresh") || autoRefresh == true && nextRefresh < clock())
-                    {
-                        refresh();
-                    }                    
-                    if (showLastRerfresh == true)
-                    {
+                        Text("User saldo:");
                         SameLine();
-                        Text(("(Last refresh " + to_string((clock() - lastRefresh) / 1000) + "s)").c_str());
-                    }
-                    if (showAutoRerfresh == true)
-                    {
-                        autoRefreshText = (nextRefresh - clock()) / 1000 + 1;
+                        printMoney(user.saldo);
+
                         SameLine();
-                        Text(("(Auto refresh " + to_string(autoRefreshText) + "s)").c_str());
-                    }
-                    else nextRefresh = clock() + autoRefreshTime * 1000;
+                        user.score = (int)(user.totalSaldo - 100000);
+                        Text(("| Score: " + to_string(user.score)).c_str());
+                        /*
+                        SameLine();
+                        user.bestScore = user.bestScore = max(user.bestScore, (int)(user.totalSaldo - 100000));
+                        Text(("| Best score: " + to_string(user.score)).c_str());
+                        */
+                        /*
+                        SameLine();
+                        Text(("| User: " + user.login).c_str());
+                        */
+                        SameLine();
+                        Text(("| Total saldo: " + to_string((int)(user.totalSaldo))).c_str());
 
-                    SameLine();
-                    Checkbox("Only owned", &ownedF);
+                        SameLine();
+                        if (Button("Reset score")) resetScore();
+                        Checkbox("Edit", &edit);
 
-                    SameLine();
-                    PushItemWidth(80);
-                    Combo("<- Sort by", &sortBy, "\0Price\0Change%24h\0total\0");
+                        SameLine();
+                        filter.Draw("<- Search", 200);
 
-                    if (BeginTable("table", 11, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(700, 175)))
-                    {
-                        TableSetupColumn("Symbol");
-                        TableSetupColumn("Description");
-                        TableSetupColumn("Blockchain");
-                        TableSetupColumn("Owned");
-                        TableSetupColumn("Total");
-
-                        TableSetupColumn("$ Price $");
-                        TableSetupColumn("24h % Change");
-                        TableSetupColumn("Search results");
-                        TableSetupColumn("Type");
-                        TableSetupColumn("Add / Delete");
-                        TableHeadersRow();
-                    }
-                    TableNextRow();
-                    {
-                        TableNextColumn(); // symbol
+                        SameLine();
+                        if (Button("Refresh") || autoRefresh == true && nextRefresh < clock())
                         {
-                            PushItemWidth(80);
-                            InputText(" ", cryptoSymbol, IM_ARRAYSIZE(cryptoSymbol));
+                            refresh();
                         }
-                        TableNextColumn(); // description
+                        if (showLastRerfresh == true)
                         {
-                            PushItemWidth(80);
-                            InputText("", cryptoDescription, IM_ARRAYSIZE(cryptoDescription));
+                            SameLine();
+                            Text(("(Last refresh " + to_string((clock() - lastRefresh) / 1000) + "s)").c_str());
                         }
-                        TableNextColumn(); // blockchain
+                        if (showAutoRerfresh == true)
                         {
-                            PushItemWidth(125);
-                            Combo("b", &blockchain[999], blockchains, IM_ARRAYSIZE(blockchains));
-                            if (blockchain[999] == 0) blockchainWin = true;
+                            autoRefreshText = (nextRefresh - clock()) / 1000 + 1;
+                            SameLine();
+                            Text(("(Auto refresh " + to_string(autoRefreshText) + "s)").c_str());
                         }
-                        TableNextColumn(); // owned
+                        else nextRefresh = clock() + autoRefreshTime * 1000;
+
+                        SameLine();
+                        Checkbox("Only owned", &ownedF);
+
+                        SameLine();
+                        PushItemWidth(80);
+                        Combo("<- Sort by", &sortBy, "\0Price\0Change%24h\0total\0");
+
+                        if (BeginTable("table", 11, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(700, 175)))
                         {
+                            TableSetupColumn("Symbol");
+                            TableSetupColumn("Description");
+                            TableSetupColumn("Blockchain");
+                            TableSetupColumn("Owned");
+                            TableSetupColumn("Total");
 
-                        }
-                        TableNextColumn(); // total
-                        {
-
-                        }
-                        TableNextColumn(); // price
-                        {
-                            TextDisabled("Auto-fill");
-                        }
-                        TableNextColumn(); // 24h prize 
-                        {
-                            TextDisabled("Auto-fill");
-                        }
-                        TableNextColumn(); // search results
-                        {
-                            TextDisabled("Auto-fill");
-                        }
-                        TableNextColumn(); // type
-                        {
-                            TextDisabled("Auto-fill");
-                        }
-                        TableNextColumn(); // add / delete
-                        {
-                            PushID("add");
-                            PushStyleColor(ImGuiCol_Button, greenColor);
-                            PushStyleColor(ImGuiCol_ButtonHovered, greenColor);
-                            PushStyleColor(ImGuiCol_ButtonActive, greenColor);
-
-                            if (Button("Add"))
-                            {
-                                if ((int)cryptoDescription[0] == 0 || (int)cryptoSymbol[0] == 0)
-                                {
-                                    addError("You need to fill: description, symbol and index.");
-                                }
-                                else
-                                {
-                                    ofstream of_cryptoBaseTxtFile(tempCrypto + "cryptocurrencyBase.txt");
-                                    {
-                                        if (!of_cryptoBaseTxtFile.fail())
-                                        {
-                                            for (int i = 0; i <= cryptoBaseSize; i++) // cheking for adding same currency
-                                            {
-                                                if (i == cryptoBaseSize)
-                                                {
-                                                    cryptoBase[cryptoBaseSize++] = { cryptoDescription, cryptoSymbol };
-
-                                                    cryptoBaseTxt += cryptoSymbol;
-                                                    cryptoBaseTxt += (" ");
-                                                    cryptoBaseTxt += cryptoDescription;
-                                                    cryptoBaseTxt += (" ");
-
-                                                    of_cryptoBaseTxtFile << cryptoBaseTxt;
-
-                                                    for (int i = 0; i < 127; i++)
-                                                    {
-                                                        cryptoDescription[i] = (int)0;
-                                                        cryptoSymbol[i] = (int)0;
-                                                    }
-
-                                                    addError("New cryptocurrency has been added successfully.");
-
-                                                    break;
-                                                }
-
-                                                if (cryptoBase[i].description == cryptoDescription || cryptoBase[i].symbol == cryptoSymbol)
-                                                {
-                                                    if (cryptoBase[i].description == cryptoDescription && cryptoBase[i].symbol == cryptoSymbol)
-                                                        addError("Adding new crypto has been failed.\nThis cryptocurrency is already added.");
-                                                    else
-                                                    {
-                                                        if (cryptoBase[i].description == cryptoDescription)
-                                                            addError("Ther is another cryptocurrency with same description");
-
-                                                        else if (cryptoBase[i].symbol == cryptoSymbol)
-                                                            addError("Ther is another cryptocurrency with same symbol");
-                                                    }
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        else addError("Adding new cryptocurrency has been failed.");
-
-                                    } of_cryptoBaseTxtFile.close();
-                                }
-                            }
-                            PopStyleColor(3);
-                            PopID();
-                        }
-                    }
-
-                    for (int i = 0; i < cryptoBaseSize; i++)
-                    {
-                        if( user.crypto.owend[i] > 0.f && ownedF == true || ownedF == false)
-                        { 
-                            if (filter.PassFilter(cryptoBase[i].symbol.c_str()) || filter.PassFilter(cryptoBase[i].description.c_str()))
-                            {
-                                for (int j = 0; j < cryptoBase[i].description.length(); j++) cryptoBaseDescription[i][j] = cryptoBase[i].description[j];
-                                for (int j = 0; j < (cryptoBase[i].symbol).length(); j++) cryptoBaseSymbol[i][j] = (cryptoBase[i].symbol)[j];
-
-                                TableNextRow();
-                                {
-                                    if (edit == 0)
-                                    {
-                                        TableNextColumn(); // Symbol
-                                        {
-                                            if (Button(cryptoBase[i].symbol.c_str()))
-                                            {
-                                                if (dataAnalysisWin == false) dataAnalysisWin = !dataAnalysisWin;
-
-                                                dataAnalysis = cryptoBase[i].description + " (" + cryptoBase[i].symbol + ") - Data analysis";
-                                                dataAnalysisI = i;
-                                            }
-                                        }
-                                        TableNextColumn(); // Description
-                                        {
-                                            Text(cryptoBaseDescription[i]);
-                                        }
-                                        TableNextColumn(); // Blockchain
-                                        {
-                                            /*
-                                            Combo(("b" + to_string(i)).c_str(), &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
-                                            if (blockchain[i] == 0) blockchainWin = true;
-                                            */
-                                        }
-                                        TableNextColumn(); // owned
-                                        {
-                                            printAmmount(user.crypto.owend[i]);
-                                        }
-                                        TableNextColumn(); // $ total $
-                                        {
-                                            printMoney(user.crypto.total[i]);
-                                        }
-                                        TableNextColumn(); // $ Price $
-                                        {
-                                            printMoney(cryptoBase[i].price);
-                                        }
-                                        TableNextColumn(); // 24h prize change
-                                        {
-                                            if (cryptoBase[i].isIncrese)
-                                                TextColored(((ImVec4)ImColor::HSV((float)(cryptoBase[i].alertLevel.top / 100.f * 0.3), 1.00f, 1.00f, 1)), ("+" + (cryptoBase[i].prizeChange24h)).c_str());
-                                            else
-                                                TextColored(((ImVec4)ImColor::HSV((float)(cryptoBase[i].alertLevel.top / 100.f * 0.3), 1.00f, 1.00f, 1)), ("-" + (cryptoBase[i].prizeChange24h)).c_str());
-                                        }
-                                        TableNextColumn(); // Search results
-                                        {
-                                            Text(cryptoBase[i].SearchResults.c_str());
-                                        }
-                                        TableNextColumn(); // type
-                                        {
-                                            //    Text(cryptoBase[i].typee.c_str());
-                                            printType(cryptoBase[i].typee);
-                                        }
-                                        /*
-                                        TableNextColumn(); // add / delete
-                                        {
-
-                                        }*/
-                                    }
-                                    else if (edit == 1)
-                                    {
-                                        TableNextColumn(); // Symbol
-                                        {
-                                            PushItemWidth(80);
-                                            InputText((" " + to_string(i)).c_str(), cryptoBaseSymbol[i], IM_ARRAYSIZE(cryptoBaseSymbol[i]));
-                                        }
-                                        TableNextColumn(); // Description
-                                        {
-                                            PushItemWidth(80);
-                                            InputText(to_string(i).c_str(), cryptoBaseDescription[i], IM_ARRAYSIZE(cryptoBaseDescription[i]));
-                                        }
-                                        TableNextColumn(); // Blockchain
-                                        {
-                                            PushItemWidth(125);
-                                            Combo("Blockchain", &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
-                                            if (blockchain[i] == 0) blockchainWin = true;
-                                        }
-                                        TableNextColumn(); // owned
-                                        {
-                                            printAmmount(user.crypto.owend[i]);
-                                        }
-                                        TableNextColumn(); // $ total $
-                                        {
-                                            printMoney(user.crypto.total[i]);
-                                        }
-                                        TableNextColumn(); // $ Price $
-                                        {
-                                            printMoney(cryptoBase[i].price);
-                                        }
-                                        TableNextColumn(); // 24h prize change
-                                        {
-                                            TextDisabled(cryptoBase[i].prizeChange24h.c_str());
-                                        }
-                                        TableNextColumn(); // Search results
-                                        {
-                                            TextDisabled(cryptoBase[i].SearchResults.c_str());
-                                        }
-                                        TableNextColumn(); // Type
-                                        {
-                                            TextDisabled(cryptoBase[i].typee.c_str());
-                                        }
-                                        TableNextColumn(); // Add / Delete
-                                        {
-                                            PushID(i);
-                                            PushStyleColor(ImGuiCol_Button, redColor);
-                                            PushStyleColor(ImGuiCol_ButtonHovered, redColor);
-                                            PushStyleColor(ImGuiCol_ButtonActive, redColor);
-
-                                            if (Button(("Delete no." + to_string(i)).c_str()))
-                                            {
-                                                deleteCrypto(i);
-                                                ofstream of_cryptoBaseTxtFile(tempCrypto + "cryptocurrencyBase.txt");
-                                                {
-                                                    if (!of_cryptoBaseTxtFile.fail())
-                                                    {
-                                                        cryptoBaseTxt = "";
-                                                        for (int i = 0; i < cryptoBaseSize; i++)
-                                                        {
-                                                            cryptoBaseTxt += cryptoSymbol;
-                                                            cryptoBaseTxt += " ";
-                                                            cryptoBaseTxt += cryptoDescription;
-                                                            cryptoBaseTxt += " ";
-                                                        }
-                                                        of_cryptoBaseTxtFile << cryptoBaseTxt;
-                                                    }
-                                                } of_cryptoBaseTxtFile.close();
-                                            }
-                                            PopStyleColor(3);
-                                            PopID();
-                                        }
-                                    }
-                                }
-                                for (int j = 0; j < 120; j++) cryptoBase[i].description = cryptoBaseDescription[i];
-                                for (int j = 0; j < 120; j++) cryptoBase[i].symbol = cryptoBaseSymbol[i];
-                            }
-                        }
-                    }
-                    EndTable();
-                }
-
-                if (CollapsingHeader("Settings", ImGuiTreeNodeFlags_None))
-                {
-                    ImGuiStyle& style = GetStyle();
-                    PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-                    PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 1.0f));
-                    ImVec2 scrolling_child_size = ImVec2(0, GetFrameHeightWithSpacing() * 7 + 30);
-                    BeginChild("scrolling", ImVec2(700, 100), true, ImGuiWindowFlags_HorizontalScrollbar);
-                    {
-                        if (BeginTable("table/settings", 6, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(1500, 100)))
-                        {
-                            TableSetupColumn("       Visual");
-                            TableSetupColumn("       Shortcuts");
-                            TableSetupColumn("       Misc");
-                            TableSetupColumn("       Preferences");
-                            TableSetupColumn("       Automation");
-                            TableSetupColumn("       Fix");
+                            TableSetupColumn("$ Price $");
+                            TableSetupColumn("24h % Change");
+                            TableSetupColumn("Search results");
+                            TableSetupColumn("Type");
+                            TableSetupColumn("Add / Delete");
                             TableHeadersRow();
                         }
-
-                        TableNextRow(); // row
+                        TableNextRow();
                         {
-                            TableNextColumn(); // Visual
+                            TableNextColumn(); // symbol
                             {
-                                Checkbox("show last rerfresh", &showLastRerfresh);
-
-                                Checkbox("show auto-rerfresh", &showAutoRerfresh);
-
-                                Checkbox("Show fps", &showFps);
-                            }
-                            TableNextColumn(); // Shortcuts
-                            {
-                                if (Button("Open Crpyto temp folder"))
-                                {
-                                    system_command(("start " + tempCrypto).c_str());
-                                }
-                                if (Button("Open coinmarketcap.com"))
-                                {
-                                    system("start https://coinmarketcap.com/currencies/");
-                                }
-                                if (Button("Open Google finance"))
-                                {
-                                    system("start https://www.google.com/finance/");
-                                }
-                            }
-                            TableNextColumn(); // Misc
-                            {
-                                Checkbox("Programing mode", &programingMode);
-                            }
-                            TableNextColumn(); // Preferences
-                            {
-                                Combo("Style color", &styleColor, "Dark\0Light\0Classic\0");
-
-                                Combo("Language", &language, "English\0...\0");
-
-                                Combo("Currency", &currency, "Dollar$\0...\0");
-                            }
-                            TableNextColumn(); // Misc
-                            {
-                                Checkbox("Auto refresh", &autoRefresh);
-
-                                SameLine();
                                 PushItemWidth(80);
-
-                                if (autoRefresh == false)
-                                    BeginDisabled();
-
-                                SliderInt("sec", &autoRefreshTimeTmp, 5, 300);
-
-                                if (autoRefresh == false)
-                                    EndDisabled();
-
-
-                                if (autoRefresh == true)
-                                {
-                                    if (autoRefreshTimeTmp != autoRefreshTime)
-                                    {
-                                        nextRefresh = clock() + (autoRefreshTimeTmp * 1000);
-                                    }
-                                    autoRefreshTime = autoRefreshTimeTmp;
-                                }
-                                else
-                                {
-                                    nextRefresh = clock() + autoRefreshTime * 1000;
-                                }
-
-                                if (styleColor == 0)
-                                    StyleColorsDark();
-
-                                else if (styleColor == 1)
-                                    StyleColorsClassic();
-
-                                else if (styleColor == 2)
-                                    StyleColorsLight();
-
-                                Text("Auto-save after delay");
-
-                                SameLine();
-
-                                autoSaveDelayTmp = autoSaveDelay;
-
-                                SliderInt("sec ", &autoSaveDelayTmp, 1, 100);
-
-                                if (autoSaveDelay != autoSaveDelayTmp)
-                                {
-                                    autoSaveTime = clock() + (autoSaveDelay * 1000);
-                                }
-                                autoSaveDelay = autoSaveDelayTmp;
+                                InputText(" ", cryptoSymbol, IM_ARRAYSIZE(cryptoSymbol));
                             }
-                            TableNextColumn();
+                            TableNextColumn(); // description
                             {
-                                if (Button("fix refresh btn"))
+                                PushItemWidth(80);
+                                InputText("", cryptoDescription, IM_ARRAYSIZE(cryptoDescription));
+                            }
+                            TableNextColumn(); // blockchain
+                            {
+                                PushItemWidth(125);
+                                Combo("b", &blockchain[999], blockchains, IM_ARRAYSIZE(blockchains));
+                                if (blockchain[999] == 0) blockchainWin = true;
+                            }
+                            TableNextColumn(); // owned
+                            {
+
+                            }
+                            TableNextColumn(); // total
+                            {
+
+                            }
+                            TableNextColumn(); // price
+                            {
+                                TextDisabled("Auto-fill");
+                            }
+                            TableNextColumn(); // 24h prize 
+                            {
+                                TextDisabled("Auto-fill");
+                            }
+                            TableNextColumn(); // search results
+                            {
+                                TextDisabled("Auto-fill");
+                            }
+                            TableNextColumn(); // type
+                            {
+                                TextDisabled("Auto-fill");
+                            }
+                            TableNextColumn(); // add / delete
+                            {
+                                PushID("add");
+                                PushStyleColor(ImGuiCol_Button, greenColor);
+                                PushStyleColor(ImGuiCol_ButtonHovered, greenColor);
+                                PushStyleColor(ImGuiCol_ButtonActive, greenColor);
+
+                                if (Button("Add"))
                                 {
-                                   destroyFile("place.txt");
-                                    system_command(("start " + dataScraperLoc).c_str());
+                                    if ((int)cryptoDescription[0] == 0 || (int)cryptoSymbol[0] == 0)
+                                    {
+                                        addError("You need to fill: description, symbol and index.");
+                                    }
+                                    else
+                                    {
+                                        ofstream of_cryptoBaseTxtFile(tempCrypto + "cryptocurrencyBase.txt");
+                                        {
+                                            if (!of_cryptoBaseTxtFile.fail())
+                                            {
+                                                for (int i = 0; i <= cryptoBaseSize; i++) // cheking for adding same currency
+                                                {
+                                                    if (i == cryptoBaseSize)
+                                                    {
+                                                        cryptoBase[cryptoBaseSize++] = { cryptoDescription, cryptoSymbol };
+
+                                                        cryptoBaseTxt += cryptoSymbol;
+                                                        cryptoBaseTxt += (" ");
+                                                        cryptoBaseTxt += cryptoDescription;
+                                                        cryptoBaseTxt += (" ");
+
+                                                        of_cryptoBaseTxtFile << cryptoBaseTxt;
+
+                                                        for (int i = 0; i < 127; i++)
+                                                        {
+                                                            cryptoDescription[i] = (int)0;
+                                                            cryptoSymbol[i] = (int)0;
+                                                        }
+
+                                                        addError("New cryptocurrency has been added successfully.");
+
+                                                        break;
+                                                    }
+
+                                                    if (cryptoBase[i].description == cryptoDescription || cryptoBase[i].symbol == cryptoSymbol)
+                                                    {
+                                                        if (cryptoBase[i].description == cryptoDescription && cryptoBase[i].symbol == cryptoSymbol)
+                                                            addError("Adding new crypto has been failed.\nThis cryptocurrency is already added.");
+                                                        else
+                                                        {
+                                                            if (cryptoBase[i].description == cryptoDescription)
+                                                                addError("Ther is another cryptocurrency with same description");
+
+                                                            else if (cryptoBase[i].symbol == cryptoSymbol)
+                                                                addError("Ther is another cryptocurrency with same symbol");
+                                                        }
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            else addError("Adding new cryptocurrency has been failed.");
+
+                                        } of_cryptoBaseTxtFile.close();
+                                    }
+                                }
+                                PopStyleColor(3);
+                                PopID();
+                            }
+                        }
+
+                        for (int i = 0; i < cryptoBaseSize; i++)
+                        {
+                            if (user.crypto.owend[i] > 0.f && ownedF == true || ownedF == false)
+                            {
+                                if (filter.PassFilter(cryptoBase[i].symbol.c_str()) || filter.PassFilter(cryptoBase[i].description.c_str()))
+                                {
+                                    for (int j = 0; j < cryptoBase[i].description.length(); j++) cryptoBaseDescription[i][j] = cryptoBase[i].description[j];
+                                    for (int j = 0; j < (cryptoBase[i].symbol).length(); j++) cryptoBaseSymbol[i][j] = (cryptoBase[i].symbol)[j];
+
+                                    TableNextRow();
+                                    {
+                                        if (edit == 0)
+                                        {
+                                            TableNextColumn(); // Symbol
+                                            {
+                                                if (Button(cryptoBase[i].symbol.c_str()))
+                                                {
+                                                    if (dataAnalysisWin == false) dataAnalysisWin = !dataAnalysisWin;
+
+                                                    dataAnalysis = cryptoBase[i].description + " (" + cryptoBase[i].symbol + ") - Data analysis";
+                                                    dataAnalysisI = i;
+                                                }
+                                            }
+                                            TableNextColumn(); // Description
+                                            {
+                                                Text(cryptoBaseDescription[i]);
+                                            }
+                                            TableNextColumn(); // Blockchain
+                                            {
+                                                /*
+                                                Combo(("b" + to_string(i)).c_str(), &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
+                                                if (blockchain[i] == 0) blockchainWin = true;
+                                                */
+                                            }
+                                            TableNextColumn(); // owned
+                                            {
+                                                printAmmount(user.crypto.owend[i]);
+                                            }
+                                            TableNextColumn(); // $ total $
+                                            {
+                                                printMoney(user.crypto.total[i]);
+                                            }
+                                            TableNextColumn(); // $ Price $
+                                            {
+                                                printMoney(cryptoBase[i].price);
+                                            }
+                                            TableNextColumn(); // 24h prize change
+                                            {
+                                                if (cryptoBase[i].isIncrese)
+                                                    TextColored(((ImVec4)ImColor::HSV((float)(cryptoBase[i].alertLevel.top / 100.f * 0.3), 1.00f, 1.00f, 1)), ("+" + (cryptoBase[i].prizeChange24h)).c_str());
+                                                else
+                                                    TextColored(((ImVec4)ImColor::HSV((float)(cryptoBase[i].alertLevel.top / 100.f * 0.3), 1.00f, 1.00f, 1)), ("-" + (cryptoBase[i].prizeChange24h)).c_str());
+                                            }
+                                            TableNextColumn(); // Search results
+                                            {
+                                                Text(cryptoBase[i].SearchResults.c_str());
+                                            }
+                                            TableNextColumn(); // type
+                                            {
+                                                //    Text(cryptoBase[i].typee.c_str());
+                                                printType(cryptoBase[i].typee);
+                                            }
+                                            /*
+                                            TableNextColumn(); // add / delete
+                                            {
+
+                                            }*/
+                                        }
+                                        else if (edit == 1)
+                                        {
+                                            TableNextColumn(); // Symbol
+                                            {
+                                                PushItemWidth(80);
+                                                InputText((" " + to_string(i)).c_str(), cryptoBaseSymbol[i], IM_ARRAYSIZE(cryptoBaseSymbol[i]));
+                                            }
+                                            TableNextColumn(); // Description
+                                            {
+                                                PushItemWidth(80);
+                                                InputText(to_string(i).c_str(), cryptoBaseDescription[i], IM_ARRAYSIZE(cryptoBaseDescription[i]));
+                                            }
+                                            TableNextColumn(); // Blockchain
+                                            {
+                                                PushItemWidth(125);
+                                                Combo("Blockchain", &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
+                                                if (blockchain[i] == 0) blockchainWin = true;
+                                            }
+                                            TableNextColumn(); // owned
+                                            {
+                                                printAmmount(user.crypto.owend[i]);
+                                            }
+                                            TableNextColumn(); // $ total $
+                                            {
+                                                printMoney(user.crypto.total[i]);
+                                            }
+                                            TableNextColumn(); // $ Price $
+                                            {
+                                                printMoney(cryptoBase[i].price);
+                                            }
+                                            TableNextColumn(); // 24h prize change
+                                            {
+                                                TextDisabled(cryptoBase[i].prizeChange24h.c_str());
+                                            }
+                                            TableNextColumn(); // Search results
+                                            {
+                                                TextDisabled(cryptoBase[i].SearchResults.c_str());
+                                            }
+                                            TableNextColumn(); // Type
+                                            {
+                                                TextDisabled(cryptoBase[i].typee.c_str());
+                                            }
+                                            TableNextColumn(); // Add / Delete
+                                            {
+                                                PushID(i);
+                                                PushStyleColor(ImGuiCol_Button, redColor);
+                                                PushStyleColor(ImGuiCol_ButtonHovered, redColor);
+                                                PushStyleColor(ImGuiCol_ButtonActive, redColor);
+
+                                                if (Button(("Delete no." + to_string(i)).c_str()))
+                                                {
+                                                    deleteCrypto(i);
+                                                    ofstream of_cryptoBaseTxtFile(tempCrypto + "cryptocurrencyBase.txt");
+                                                    {
+                                                        if (!of_cryptoBaseTxtFile.fail())
+                                                        {
+                                                            cryptoBaseTxt = "";
+                                                            for (int i = 0; i < cryptoBaseSize; i++)
+                                                            {
+                                                                cryptoBaseTxt += cryptoSymbol;
+                                                                cryptoBaseTxt += " ";
+                                                                cryptoBaseTxt += cryptoDescription;
+                                                                cryptoBaseTxt += " ";
+                                                            }
+                                                            of_cryptoBaseTxtFile << cryptoBaseTxt;
+                                                        }
+                                                    } of_cryptoBaseTxtFile.close();
+                                                }
+                                                PopStyleColor(3);
+                                                PopID();
+                                            }
+                                        }
+                                    }
+                                    for (int j = 0; j < 120; j++) cryptoBase[i].description = cryptoBaseDescription[i];
+                                    for (int j = 0; j < 120; j++) cryptoBase[i].symbol = cryptoBaseSymbol[i];
                                 }
                             }
                         }
                         EndTable();
                     }
-                    EndChild();
-                    PopStyleVar(2);
-                    Spacing();
-                }
 
-                if (CollapsingHeader("Account", ImGuiTreeNodeFlags_None))
-                {
+                    if (CollapsingHeader("Settings", ImGuiTreeNodeFlags_None))
                     {
-                        Text(("User : " + user.login).c_str());
-                        SameLine();
-                        Text(("Password : " + user.password).c_str());
-                        SameLine();
-                        Button("Change password");
-                    }
-                }
-
-                if(colorTool == true && programingMode == true)
-                    if (CollapsingHeader("color", ImGuiTreeNodeFlags_None))
-                    {
-                        static ImVec4 color_hsv(0.23f, 1.0f, 1.0f, 1.0f); // Stored as HSV!
-
-                        ColorEdit4("HSV shown as HSV##1", (float*)&color_hsv, ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
-                    }
-
-                if (showFps == true)
-                    Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / GetIO().Framerate, GetIO().Framerate);
-            }
-
-            Begin("Login win", NULL, window_flags);
-            {
-                PushItemWidth(100);
-                InputText("Login", loginTI, IM_ARRAYSIZE(loginTI));
-
-                PushItemWidth(100);
-                InputText("password", passwordTI, IM_ARRAYSIZE(passwordTI), ImGuiInputTextFlags_Password);
-
-                static bool rememberMe = false;
-
-                Checkbox("Remember me", &rememberMe);
-
-                SameLine();
-
-                if (Button("> Login"))
-                {
-                    for (int i = 0; i < usersNum; i++)
-                    {
-                        if (users[i].login == loginTI && users[i].password == passwordTI)
+                        ImGuiStyle& style = GetStyle();
+                        PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+                        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 1.0f));
+                        ImVec2 scrolling_child_size = ImVec2(0, GetFrameHeightWithSpacing() * 7 + 30);
+                        BeginChild("scrolling", ImVec2(700, 100), true, ImGuiWindowFlags_HorizontalScrollbar);
                         {
-                            user.login = loginTI;
-                            user.password = passwordTI;
-                            if (rememberMe == true) user.remember = true;
+                            if (BeginTable("table/settings", 6, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(1500, 100)))
+                            {
+                                TableSetupColumn("       Visual");
+                                TableSetupColumn("       Shortcuts");
+                                TableSetupColumn("       Misc");
+                                TableSetupColumn("       Preferences");
+                                TableSetupColumn("       Automation");
+                                TableSetupColumn("       Fix");
+                                TableHeadersRow();
+                            }
 
-                            usersSave();
-                            
-                            //    addError(("User" + user.login).c_str());
+                            TableNextRow(); // row
+                            {
+                                TableNextColumn(); // Visual
+                                {
+                                    Checkbox("show last rerfresh", &showLastRerfresh);
+
+                                    Checkbox("show auto-rerfresh", &showAutoRerfresh);
+
+                                    Checkbox("Show fps", &showFps);
+                                }
+                                TableNextColumn(); // Shortcuts
+                                {
+                                    if (Button("Open Crpyto temp folder"))
+                                    {
+                                        system_command(("start " + tempCrypto).c_str());
+                                    }
+                                    if (Button("Open coinmarketcap.com"))
+                                    {
+                                        system("start https://coinmarketcap.com/currencies/");
+                                    }
+                                    if (Button("Open Google finance"))
+                                    {
+                                        system("start https://www.google.com/finance/");
+                                    }
+                                }
+                                TableNextColumn(); // Misc
+                                {
+                                    Checkbox("Programing mode", &programingMode);
+                                }
+                                TableNextColumn(); // Preferences
+                                {
+                                    Combo("Style color", &styleColor, "Dark\0Light\0Classic\0");
+
+                                    Combo("Language", &language, "English\0...\0");
+
+                                    Combo("Currency", &currency, "Dollar$\0...\0");
+                                }
+                                TableNextColumn(); // Misc
+                                {
+                                    Checkbox("Auto refresh", &autoRefresh);
+
+                                    SameLine();
+                                    PushItemWidth(80);
+
+                                    if (autoRefresh == false)
+                                        BeginDisabled();
+
+                                    SliderInt("sec", &autoRefreshTimeTmp, 5, 300);
+
+                                    if (autoRefresh == false)
+                                        EndDisabled();
+
+
+                                    if (autoRefresh == true)
+                                    {
+                                        if (autoRefreshTimeTmp != autoRefreshTime)
+                                        {
+                                            nextRefresh = clock() + (autoRefreshTimeTmp * 1000);
+                                        }
+                                        autoRefreshTime = autoRefreshTimeTmp;
+                                    }
+                                    else
+                                    {
+                                        nextRefresh = clock() + autoRefreshTime * 1000;
+                                    }
+
+                                    if (styleColor == 0)
+                                        StyleColorsDark();
+
+                                    else if (styleColor == 1)
+                                        StyleColorsClassic();
+
+                                    else if (styleColor == 2)
+                                        StyleColorsLight();
+
+                                    Text("Auto-save after delay");
+
+                                    SameLine();
+
+                                    autoSaveDelayTmp = autoSaveDelay;
+
+                                    SliderInt("sec ", &autoSaveDelayTmp, 1, 100);
+
+                                    if (autoSaveDelay != autoSaveDelayTmp)
+                                    {
+                                        autoSaveTime = clock() + (autoSaveDelay * 1000);
+                                    }
+                                    autoSaveDelay = autoSaveDelayTmp;
+                                }
+                                TableNextColumn();
+                                {
+                                    if (Button("fix refresh btn"))
+                                    {
+                                        destroyFile("place.txt");
+                                        system_command(("start " + dataScraperLoc).c_str());
+                                    }
+                                }
+                            }
+                            EndTable();
+                        }
+                        EndChild();
+                        PopStyleVar(2);
+                        Spacing();
+                    }
+
+                    if (CollapsingHeader("Account", ImGuiTreeNodeFlags_None))
+                    {
+                        {
+                            Text(("User : " + user.login).c_str());
+                            SameLine();
+                            Text(("Password : " + user.password).c_str());
+                            SameLine();
+                            Button("Change password");
                         }
                     }
-                    
-                    for (int i = 0; i < 128; i++)
-                    {
-                        loginTI[i] = (char)0;
-                        passwordTI[i] = (char)0;
-                    }
-                }
-                
-                if (Button("Create new acc"))
-                {
-                    addUser(loginTI, passwordTI);
 
-                    for (int i = 0; i < 128; i++)
-                    {
-                        loginTI[i] = (char)0;
-                        passwordTI[i] = (char)0;
-                    }
+                    if (colorTool == true && programingMode == true)
+                        if (CollapsingHeader("color", ImGuiTreeNodeFlags_None))
+                        {
+                            static ImVec4 color_hsv(0.23f, 1.0f, 1.0f, 1.0f); // Stored as HSV!
+
+                            ColorEdit4("HSV shown as HSV##1", (float*)&color_hsv, ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
+                        }
+
+                    if (showFps == true)
+                        Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / GetIO().Framerate, GetIO().Framerate);
                 }
             }
-            End();
+
+            if (loginWinShow == true)
+            {
+                Begin("Login win", NULL, window_flags);
+                {
+                    PushItemWidth(100);
+                    InputText("Login", loginTI, IM_ARRAYSIZE(loginTI));
+
+                    PushItemWidth(100);
+                    InputText("password", passwordTI, IM_ARRAYSIZE(passwordTI), ImGuiInputTextFlags_Password);
+
+                    static bool rememberMe = false;
+
+                    Checkbox("Remember me", &rememberMe);
+
+                    SameLine();
+
+                    if (Button("> Login"))
+                    {
+                        for (int i = 0; i < usersNum; i++)
+                        {
+                            if (users[i].login == loginTI && users[i].password == passwordTI)
+                            {
+                                user.login = loginTI;
+                                user.password = passwordTI;
+                                if (rememberMe == true) user.remember = true;
+
+                                usersSave();
+
+                                //    addError(("User" + user.login).c_str());
+                            }
+                        }
+
+                        for (int i = 0; i < 128; i++)
+                        {
+                            loginTI[i] = (char)0;
+                            passwordTI[i] = (char)0;
+                        }
+                    }
+
+                    if (Button("Create new acc"))
+                    {
+                        addUser(loginTI, passwordTI);
+
+                        for (int i = 0; i < 128; i++)
+                        {
+                            loginTI[i] = (char)0;
+                            passwordTI[i] = (char)0;
+                        }
+                    }
+                }
+                End();
+            }
 
             if (autoSaveTime < clock())
             {

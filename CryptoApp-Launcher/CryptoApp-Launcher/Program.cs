@@ -1,15 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Runtime.InteropServices;
-
 using System.Diagnostics;
-
+using System.Runtime.InteropServices;
 
 namespace CryptoApp_Launcher
 {
-    static class ConsoleExtension
+    static class console
     {
         readonly static IntPtr handle = GetConsoleWindow();
         [DllImport("kernel32.dll")] static extern IntPtr GetConsoleWindow();
@@ -17,9 +13,8 @@ namespace CryptoApp_Launcher
         public static void Hide() { ShowWindow(handle, 0); }
         public static void Show() { ShowWindow(handle, 5); }
     }
-
     class Program
-    {
+    {       
         static void system(string str)
         {
             Process cmd = new Process();
@@ -45,57 +40,48 @@ namespace CryptoApp_Launcher
         static void checkPath(string str)
         {
             char[] strChared = str.ToCharArray(0, str.Length);
-            string fullPath = "";
+            string text = "";
             string partOfPath = "";
             string[] floderPaths = { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", }; // [128]
             int currArray = 0;
 
             for (int i = 0; i < str.Length; i++)
             {
-            //    Console.Write(strChared[i]);
-
                 if (strChared[i] == (char)92) // mean next folder 
                 {
-                    Console.WriteLine("");
+                    if ("CryptoApp" == partOfPath) cryptoAppPath = text;
 
                     floderPaths[currArray++] = partOfPath;
-                    Console.WriteLine("partOfPath : " + partOfPath);
 
-                    if ("CryptoApp" == partOfPath) cryptoAppPath = fullPath;
-                    
                     partOfPath = "";
                 }
-                else
-                {
-                    partOfPath += strChared[i];
-                }
-                fullPath += strChared[i];
+                else partOfPath += strChared[i];
+                
+                text += strChared[i];
             }
             Console.WriteLine(cryptoAppPath);      
         }
-
-static void Main(string[] args)
+        static void Main(string[] args)
         {
 #if DEBUG
-            ConsoleExtension.Show();
+            console.Show();
 #else
-            ConsoleExtension.Hide();
+            console.Hide();
 #endif        
             checkPath(Path.GetFullPath("CryptoApp-Launcher.exe"));
 
             if ((File.Exists((cryptoAppPath + @"\cryptoApp.exe")) ? "File exists." : "File does not exist.") == "File does not exist.")
             {
-                System.IO.File.Copy((cryptoAppPath + cppPath), (cryptoAppPath + @"\cryptoApp.exe"), true);
-
-                system("start" + cryptoAppPath + @"\cryptoApp.exe");
-
-                System.Environment.Exit(0);
+                if ((File.Exists((cryptoAppPath + cppPath)) ? "File exists." : "File does not exist.") == "File exists.")
+                {
+                    system("start " + cryptoAppPath + cppPath); // Run imgui app
+                    System.IO.File.Copy((cryptoAppPath + cppPath), (cryptoAppPath + @"\cryptoApp.exe"), true); // Copy cpp imgui app to cryptoApp folder
+                }
+                console.Hide(); // Hide console
+                System.Environment.Exit(0); // Exit program
             }
-            else // "File exists."
-            {
-             //   system("start " + cryptoAppPath + @"\cryptoApp.exe");
-                system("start " + cryptoAppPath + cppPath);
-            }
+            else system("start " + cryptoAppPath + cppPath);
+            // (cryptoAppPath + @"\cryptoApp.exe") -> "File exists."
         }
     }
 }
