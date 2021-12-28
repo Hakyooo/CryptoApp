@@ -1,5 +1,7 @@
 ﻿#include <iostream>
 #include <windows.h>
+#include <filesystem>
+#include <direct.h> // mkdir()
 #include <string>
 #include <fstream> 
 #include <sstream>
@@ -7,10 +9,9 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <cstdlib>
-#include <filesystem>
-#include <direct.h> // mkdir()
 #include <time.h>
 #include <iomanip>
+
 #include <d3d9.h> 
 #include "imgui.h"
 #include "imgui_impl_dx9.h"
@@ -97,6 +98,9 @@ static bool blockchainWin = false;
 static char addNewBlockchain[128];
 
 static bool alertLevel = true;
+
+static char newPassword[128];
+static char confirmNewPassword[128];
 
 const char* errorReason = NULL; // error reason text
 static bool errorVisible = false; // error win visible
@@ -388,6 +392,10 @@ void readScrapedBase()
 {
     ifstream cryptoScrapedBase(tempCrypto + "cryptocurrencyScrapedBase.txt");
     {
+        /*
+            BTC Coin Price: zł199,446.66 5.37%+
+            BTC Coin Price: $49,014.51 4.81%+
+        */
         if (!cryptoScrapedBase.fail())
         {
             static char ch = '0';
@@ -563,6 +571,10 @@ void printMoney(double money)
     {
         Text((to_string((int)(money / 1000)) + "k $").c_str());
     }
+    else if (money > 10)
+    {
+        Text((to_string((int)(money)) + " $").c_str());
+    }
     else if (money > 0.0001)
     {
         Text((to_string((float)money) + " $").c_str());
@@ -613,7 +625,13 @@ void printAmmount(double ammount)
     return;
 }
 
-#include <winbase.h>
+void clearCharArray(char charArray[], int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        charArray[i] = (int)0;
+    }
+}
 
 int main(int, char**)
 {
@@ -664,10 +682,11 @@ int main(int, char**)
         }
     } tempCryptoCheck.close();
 
+    static bool changePasswordWin = false;
     static bool loginWinShow = false;
     static bool mainWinShow = false;
     static bool is = false;
-    static int iii = 0;
+    static int currentUser = 0;
 
     user.login = "";
     user.password = "";
@@ -684,7 +703,7 @@ int main(int, char**)
     {
         if (users[i].remember == true) {
             is = true;
-            iii = i;
+            currentUser = i;
         }
     }
     if (usersNum == 0)
@@ -696,7 +715,7 @@ int main(int, char**)
     {
         if (is == true)
         {
-            user = users[iii];
+            user = users[currentUser];
          //   mainWinShow = false;
         }
         else
@@ -786,7 +805,10 @@ int main(int, char**)
                             if (Button("Reset score")) resetScore();
                             */
                             SameLine();
-                            Button("Change password");
+                            if (Button("Change password"))
+                            {
+                                changePasswordWin = true;
+                            }
                             SameLine();
                             if (Button("Logout"))
                             {
@@ -1166,7 +1188,7 @@ int main(int, char**)
 
                                 Combo("Language", &language, "English\0...\0");
 
-                                Combo("Currency", &currency, "Dollar$\0...\0");
+                                Combo("Currency", &currency, "Dollar$\0Zloty\0");
                             }
                             TableNextColumn(); // Misc
                             {
@@ -1299,15 +1321,14 @@ int main(int, char**)
 
                                 usersSave();
 
+                                currentUser = i;
                                 loginWinShow = false;
                             }
                         }
 
-                        for (int i = 0; i < 128; i++)
-                        {
-                            loginTI[i] = (char)0;
-                            passwordTI[i] = (char)0;
-                        }
+                        clearCharArray(loginTI, 128);
+                        clearCharArray(passwordTI, 128);
+
                     }
 
                     if (Button("Create new acc"))
@@ -1324,11 +1345,38 @@ int main(int, char**)
                 End();
             }
 
-            static bool changePasswordWin = true;
-            if (changePasswordWin = true)
+            if (changePasswordWin == true)
             {
-                Begin("Cryptocurrency analysis", NULL, window_flags);
+                Begin("Change password ", NULL, window_flags);
                 {
+                    PushItemWidth(80);
+                    InputText("new password", newPassword,IM_ARRAYSIZE(newPassword));
+                    PushItemWidth(80);
+                    InputText("confirm new password", confirmNewPassword,IM_ARRAYSIZE(confirmNewPassword));
+
+                    if (Button("Save"))
+                    {
+                        user.password = newPassword;
+                        users[currentUser].password = newPassword;
+                        changePasswordWin = false;
+                        clearCharArray(newPassword, 128);
+                        clearCharArray(confirmNewPassword, 128);
+                        /*
+                        for (int i = 0; i < (max(newPassword.lenght(), confirmNewPassword.lenght())); i++)
+                        {
+                            if (newPassword[i] == confirmNewPassword[i])
+                            {
+
+                            }
+                            addError("Passwords are diffrent !");
+                        }
+                        else
+                        {
+                            user.password = newPassword;
+                            users[currentUser].password = newPassword;
+                        }
+                        */
+                    }
                 }
                 End();
             }

@@ -46,11 +46,18 @@ namespace scraper
             return doc.DocumentNode.SelectNodes("//*[@class=\"sc-16r8icm-0 kjciSH priceSection\"]").First().InnerText;
         }
 
-    //    static string currency; // = "Dollar" / "Zloty"
+        //    static string currency; // = "Dollar" / "Zloty"
+
+        // Pl language https://coinmarketcap.com/pl/currencies/bitcoin";
+
+        public const string coinmarketcapLink_pl = "https://coinmarketcap.com/pl/currencies/";
+        public const string coinmarketcapLink_us = "https://coinmarketcap.com/plcurrencies/";
+
+        public const string coinmarketcapLink = coinmarketcapLink_us;
+
         public static String getCryptoPrice(string cryptocurrency)
         {
-            // Pl language https://coinmarketcap.com/pl/currencies/bitcoin";
-            string link = "https://coinmarketcap.com/currencies/" + cryptocurrency;// print("start " + link);
+            string link = coinmarketcapLink + cryptocurrency;// print("start " + link);
 
             HtmlWeb web = new HtmlWeb();
             HtmlDocument doc = web.Load(link);
@@ -59,8 +66,7 @@ namespace scraper
         }
         public static String getCryptoType(string cryptocurrency)
         {
-            // Pl language https://coinmarketcap.com/pl/currencies/bitcoin";
-            string link = "https://coinmarketcap.com/currencies/" + cryptocurrency; //print("start " + link);
+            string link = coinmarketcapLink + cryptocurrency; //print("start " + link);
 
             HtmlWeb web = new HtmlWeb();
             HtmlDocument doc = web.Load(link);
@@ -81,7 +87,6 @@ namespace scraper
 
             doc.DocumentNode.SelectNodes("//*[@class=\"iXabQc vgpkr\"]");
         }
-
         
         static void Main(string[] args)
         {
@@ -144,6 +149,7 @@ namespace scraper
                             if (turnFor == 0) turnFor = 1;
                             else if (turnFor == 1)
                             {
+                                print("try desc");
                                 scapedData.WriteLine(symb + " " + getCryptoType(desc) + " " + getCryptoPrice(desc) + "+");
                                 
                                 turnFor = 0; desc = ""; symb = "";
