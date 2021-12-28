@@ -46,7 +46,7 @@ namespace scraper
             return doc.DocumentNode.SelectNodes("//*[@class=\"sc-16r8icm-0 kjciSH priceSection\"]").First().InnerText;
         }
 
-        static string currency; // = "Dollar" / "Zloty"
+    //    static string currency; // = "Dollar" / "Zloty"
         public static String getCryptoPrice(string cryptocurrency)
         {
             // Pl language https://coinmarketcap.com/pl/currencies/bitcoin";

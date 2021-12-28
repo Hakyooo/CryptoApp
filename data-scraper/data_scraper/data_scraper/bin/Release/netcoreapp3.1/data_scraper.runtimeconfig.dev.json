@@ -1,8 +1,8 @@
 {
   "runtimeOptions": {
     "additionalProbingPaths": [
-      "C:\\Users\\moolm\\.dotnet\\store\\|arch|\\|tfm|",
-      "C:\\Users\\moolm\\.nuget\\packages"
+      "C:\\Users\\mati\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\mati\\.nuget\\packages"
     ]
   }
 }

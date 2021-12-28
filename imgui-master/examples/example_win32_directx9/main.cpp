@@ -36,6 +36,8 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 const string tempFolder = getenv("TEMP"); // temp folder
 const string tempCrypto = tempFolder + "\\Crypto\\"; // crypto folder in temp
+const string USERPROFILE = getenv("USERPROFILE");
+const string pulpitPath = USERPROFILE + "\\Pulpit";
 
 const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 const ImVec4 redColor = (ImVec4)ImColor::HSV(1.f, 1.f, 1.f, 0.8f);
@@ -75,7 +77,6 @@ static bool ownedF = false; // chekcbox
 
 static int sortBy = NULL; // combobox currently selected item
 
-static bool programingMode = true; // checkbox
 static bool colorTool = true; // CollapsingHeader / progrmingMode
 
 static char cryptoAlertLevel[128]; // auto-fill
@@ -213,7 +214,9 @@ void usersSave()
     {
         if (userCrypto.fail()) return;
 
-        for (int j = 0; j < c_usersNum; j++)
+        userCrypto << usersNum << endl;
+
+        for (int j = 0; j < usersNum; j++)
         {
             userCrypto << users[j].saldo << endl;
             userCrypto << users[j].bestScore << endl;
@@ -228,7 +231,6 @@ void usersSave()
             }
         }
     }
-    userCrypto << usersNum << endl;
     userCrypto.close();
 
     return;
@@ -237,13 +239,11 @@ void usersLoad()
 {
     ifstream userCrypto(tempCrypto + "userCrypto.txt");
     {
-        if (userCrypto.fail())
-        {
-            userSetDefult(user);
-            return;
-        }
+        if (userCrypto.fail()) return;
+        
+        userCrypto >> usersNum;
 
-        for (int i = 0; i < c_usersNum; i++)
+        for (int i = 0; i < usersNum; i++)
         {
             userCrypto >> users[i].saldo;
             userCrypto >> users[i].bestScore;
@@ -257,7 +257,6 @@ void usersLoad()
                 userCrypto >> users[i].crypto.owend[i];
             }
         }
-        userCrypto >> usersNum;
     }userCrypto.close();
 
     return;
@@ -265,11 +264,14 @@ void usersLoad()
 
 void addUser(string login, string password, bool remember)
 {
-    userSetDefult(users[usersNum]);
-
     users[usersNum].login = login;
     users[usersNum].password = password;
     users[usersNum].remember = remember;
+    users[usersNum].saldo = 100000.f;
+    users[usersNum].totalSaldo = 0.f;
+    users[usersNum].score = 0.f;
+    users[usersNum].bestScore = 0.f;
+    for (int i = 0; i < 999; i++) users[usersNum].crypto = { 0.f, 0.f };
 
     usersNum++;
 
@@ -295,7 +297,6 @@ void userBaseUpdate()
 
 void saveSettings()
 {
-    return;
     ofstream settingsFile(tempCrypto + "settings.txt");
     {
         if (!settingsFile.fail())
@@ -314,8 +315,6 @@ void saveSettings()
             settingsFile << showAutoRerfresh << endl;
 
             settingsFile << autoSaveDelay << endl;
-
-            settingsFile << programingMode << endl;
         }
     } settingsFile.close();
 
@@ -341,8 +340,6 @@ void updateSettings()
             settingsFile >> showAutoRerfresh;
 
             settingsFile >> autoSaveDelay;
-
-            settingsFile >> programingMode;
 
             if (styleColor == 0) StyleColorsDark();
             else if (styleColor == 1) StyleColorsClassic();
@@ -502,9 +499,9 @@ void readCryptoBaseFile()
 
 void refresh()
 {
-    if (cHashPath == false) return;
+ //   if (cHashPath == false) return;
 
-    system_command(("start " + dataScraperLoc).c_str());
+    system_command(("start " + tempCrypto + "\data_scraper.exe").c_str());
     readScrapedBase();
     
     if (cryptoBase[cryptoBaseSize].price != 0.f)
@@ -616,6 +613,8 @@ void printAmmount(double ammount)
     return;
 }
 
+#include <winbase.h>
+
 int main(int, char**)
 {
 
@@ -670,9 +669,18 @@ int main(int, char**)
     static bool is = false;
     static int iii = 0;
 
-    userSetDefult(user);
+    user.login = "";
+    user.password = "";
+    user.remember = false;
+    user.saldo = 100000.f;
+    user.totalSaldo = 0.f;
+    user.score = 0.f;
+    user.bestScore = 0.f;
+    for (int i = 0; i < 999; i++)
+        user.crypto = { 0.f, 0.f };
+
     usersLoad();
-    for (int i = 0; i < c_cryptoNum; i++)
+    for (int i = 0; i < usersNum; i++)
     {
         if (users[i].remember == true) {
             is = true;
@@ -686,11 +694,10 @@ int main(int, char**)
     }
     else
     {
-        mainWinShow = true;
-
         if (is == true)
         {
             user = users[iii];
+         //   mainWinShow = false;
         }
         else
         {
@@ -704,7 +711,8 @@ int main(int, char**)
 
     updateSettings(); // load settings from file
 
-   // refresh();
+    refresh();
+
    // readScrapedBase();
 
     static string dataAnalysis = "NULL";
@@ -736,34 +744,76 @@ int main(int, char**)
             {
                 Begin("Cryptocurrency analysis", NULL, window_flags);
                 {
-                    user.totalSaldo = user.saldo;
-
-                    for (int i = 0; i < 999; i++)
+                    if (user.login.length() > 0 && usersNum > 0)
                     {
-                        user.totalSaldo += user.crypto.owend[i] * cryptoBase[i].price;
+                        if (CollapsingHeader("Account", ImGuiTreeNodeFlags_None))
+                        {
+                            Text(("User: " + user.login).c_str());
+
+                            SameLine();
+                            Text((" | Password: " + user.password).c_str());
+
+                            user.totalSaldo = user.saldo;
+
+                            for (int i = 0; i < 999; i++)
+                            {
+                                user.totalSaldo += user.crypto.owend[i] * cryptoBase[i].price;
+                            }
+
+                            SameLine();
+                            Text("| Saldo:");
+                            SameLine();
+                            printMoney(user.saldo);
+
+                            SameLine();
+                            user.score = (int)(user.totalSaldo - 100000);
+                            Text(("| Score: " + to_string(user.score)).c_str());
+                            /*
+                            SameLine();
+                            user.bestScore = user.bestScore = max(user.bestScore, (int)(user.totalSaldo - 100000));
+                            Text(("| Best score: " + to_string(user.score)).c_str());
+                            */
+                            /*
+                            SameLine();
+                            Text(("| User: " + user.login).c_str());
+                            */
+                            /*
+                            SameLine();
+                            Text(("| Total saldo: " + to_string((int)(user.totalSaldo))).c_str());
+                            */
+                            /*
+                            SameLine();
+                            if (Button("Reset score")) resetScore();
+                            */
+                            SameLine();
+                            Button("Change password");
+                            SameLine();
+                            if (Button("Logout"))
+                            {
+                                for (int i = 0; i <= usersNum; i++)
+                                {
+                                    if (users[i].login == user.login && users[i].password == user.password)
+                                    {
+                                        users[i].remember = false;
+                                    }
+                                }
+                                usersSave();
+                                user.login = "";
+                                user.password = "";
+                                user.remember = false;
+                                user.saldo = 100000.f;
+                                user.totalSaldo = 0.f;
+                                user.score = 0.f;
+                                user.bestScore = 0.f;
+                                for (int i = 0; i < 999; i++)
+                                    user.crypto = { 0.f, 0.f };
+
+
+                                loginWinShow = true;
+                            }
+                        }
                     }
 
-                    Text("User saldo:");
-                    SameLine();
-                    printMoney(user.saldo);
-
-                    SameLine();
-                    user.score = (int)(user.totalSaldo - 100000);
-                    Text(("| Score: " + to_string(user.score)).c_str());
-                    /*
-                    SameLine();
-                    user.bestScore = user.bestScore = max(user.bestScore, (int)(user.totalSaldo - 100000));
-                    Text(("| Best score: " + to_string(user.score)).c_str());
-                    */
-                    /*
-                    SameLine();
-                    Text(("| User: " + user.login).c_str());
-                    */
-                    SameLine();
-                    Text(("| Total saldo: " + to_string((int)(user.totalSaldo))).c_str());
-
-                    SameLine();
-                    if (Button("Reset score")) resetScore();
                     Checkbox("Edit", &edit);
 
                     SameLine();
@@ -825,7 +875,6 @@ int main(int, char**)
                         {
                             PushItemWidth(125);
                             Combo("b", &blockchain[999], blockchains, IM_ARRAYSIZE(blockchains));
-                            if (blockchain[999] == 0) blockchainWin = true;
                         }
                         TableNextColumn(); // owned
                         {
@@ -1004,7 +1053,6 @@ int main(int, char**)
                                         {
                                             PushItemWidth(125);
                                             Combo("Blockchain", &blockchain[i], blockchains, IM_ARRAYSIZE(blockchains));
-                                            if (blockchain[i] == 0) blockchainWin = true;
                                         }
                                         TableNextColumn(); // owned
                                         {
@@ -1081,7 +1129,6 @@ int main(int, char**)
                         {
                             TableSetupColumn("       Visual");
                             TableSetupColumn("       Shortcuts");
-                            TableSetupColumn("       Misc");
                             TableSetupColumn("       Preferences");
                             TableSetupColumn("       Automation");
                             TableSetupColumn("       Fix");
@@ -1112,10 +1159,6 @@ int main(int, char**)
                                 {
                                     system("start https://www.google.com/finance/");
                                 }
-                            }
-                            TableNextColumn(); // Misc
-                            {
-                                Checkbox("Programing mode", &programingMode);
                             }
                             TableNextColumn(); // Preferences
                             {
@@ -1154,14 +1197,9 @@ int main(int, char**)
                                     nextRefresh = clock() + autoRefreshTime * 1000;
                                 }
 
-                                if (styleColor == 0)
-                                    StyleColorsDark();
-
-                                else if (styleColor == 1)
-                                    StyleColorsClassic();
-
-                                else if (styleColor == 2)
-                                    StyleColorsLight();
+                                if      (styleColor == 0) StyleColorsDark();
+                                else if (styleColor == 1) StyleColorsClassic();
+                                else if (styleColor == 2) StyleColorsLight();
 
                                 Text("Auto-save after delay");
 
@@ -1193,18 +1231,6 @@ int main(int, char**)
                     Spacing();
                 }
 
-                if (CollapsingHeader("Account", ImGuiTreeNodeFlags_None))
-                {
-                    {
-                        Text(("User : " + user.login).c_str());
-                        SameLine();
-                        Text(("Password : " + user.password).c_str());
-                        SameLine();
-                        Button("Change password");
-                        Button("Logout");
-                    }
-                }
-
 #ifdef _DEBUG
                 if (CollapsingHeader("Debug", ImGuiTreeNodeFlags_None))
                 {   //  to_string()
@@ -1220,16 +1246,12 @@ int main(int, char**)
                         SameLine();
                         Text(("| Saldo: " + to_string(users[i].saldo)).c_str());
                     }
-                }
+
+                    static ImVec4 color_hsv(0.23f, 1.0f, 1.0f, 1.0f); // Stored as HSV!
+
+                    ColorEdit4("HSV shown as HSV##1", (float*)&color_hsv, ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
+                }       
 #endif // _DEBUG
-
-                if (colorTool == true && programingMode == true)
-                    if (CollapsingHeader("color", ImGuiTreeNodeFlags_None))
-                    {
-                        static ImVec4 color_hsv(0.23f, 1.0f, 1.0f, 1.0f); // Stored as HSV!
-
-                        ColorEdit4("HSV shown as HSV##1", (float*)&color_hsv, ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
-                    }
 
                 if (showFps == true)
                     Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / GetIO().Framerate, GetIO().Framerate);
@@ -1266,9 +1288,18 @@ int main(int, char**)
                                 user.login = loginTI;
                                 user.password = passwordTI;
                                 user.remember = rememberMe;
+                                for (int j = 0; j <= usersNum; j++)
+                                {
+                                    if (users[j].remember == true && i != j)
+                                    {
+                                        users[j].remember = false;
+                                    }
+                                }
+                                user.saldo = users[i].saldo;
 
                                 usersSave();
 
+                                loginWinShow = false;
                             }
                         }
 
@@ -1292,7 +1323,16 @@ int main(int, char**)
                 }
                 End();
             }
-            
+
+            static bool changePasswordWin = true;
+            if (changePasswordWin = true)
+            {
+                Begin("Cryptocurrency analysis", NULL, window_flags);
+                {
+                }
+                End();
+            }
+
             if (autoSaveTime < clock())
             {
                 saveSettings();
@@ -1300,7 +1340,6 @@ int main(int, char**)
 
                 autoSaveTime = clock() + (autoSaveDelay * 1000);
             }
-            //End();
 
             if (blockchainWin == true)
             {
