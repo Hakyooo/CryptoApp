@@ -207,27 +207,6 @@ void userSetDefult(userStruct user)
     return;
 }
 
-void userSave(userStruct user)
-{
-    ofstream userCrypto(tempCrypto + "userCrypto.txt");
-    {
-        if (userCrypto.fail()) return;
-
-        userCrypto << user.saldo << endl;
-        userCrypto << user.bestScore << endl;
-        userCrypto << user.login << endl;
-        userCrypto << user.password << endl;
-        userCrypto << user.remember << endl;
-
-        for (int i = 0; i < c_cryptoNum; i++)
-        {
-            userCrypto << user.crypto.total[i] << endl;
-            userCrypto << user.crypto.owend[i] << endl;
-        }
-    } userCrypto.close();
-
-    return;
-}
 void usersSave()
 {
     ofstream userCrypto(tempCrypto + "userCrypto.txt");
@@ -249,13 +228,12 @@ void usersSave()
             }
         }
     }
-  //  userCrypto << usersNum << endl;
+    userCrypto << usersNum << endl;
     userCrypto.close();
 
     return;
 }
-
-void userLoad(userStruct user)
+void usersLoad()
 {
     ifstream userCrypto(tempCrypto + "userCrypto.txt");
     {
@@ -265,45 +243,35 @@ void userLoad(userStruct user)
             return;
         }
 
-        userCrypto >> user.saldo;
-        userCrypto >> user.bestScore;
-        userCrypto >> user.login;
-        userCrypto >> user.password;
-        userCrypto >> user.remember;
-
-        for (int i = 0; i < c_cryptoNum; i++)
+        for (int i = 0; i < c_usersNum; i++)
         {
-            userCrypto >> user.crypto.total[i];
-            userCrypto >> user.crypto.owend[i];
+            userCrypto >> users[i].saldo;
+            userCrypto >> users[i].bestScore;
+            userCrypto >> users[i].login;
+            userCrypto >> users[i].password;
+            userCrypto >> users[i].remember;
+
+            for (int i = 0; i < c_cryptoNum; i++)
+            {
+                userCrypto >> users[i].crypto.total[i];
+                userCrypto >> users[i].crypto.owend[i];
+            }
         }
-
-    } userCrypto.close();
-    return;
-}
-void usersLoad()
-{
-    for (int i = 0; i < c_usersNum; i++)
-    {
-        userLoad(users[i]);
-    }
-    ifstream userCrypto(tempCrypto + "userCrypto.txt");
-    userCrypto >> usersNum;
-    userCrypto.close();
+        userCrypto >> usersNum;
+    }userCrypto.close();
 
     return;
 }
 
-void addUser(string login, string password)
+void addUser(string login, string password, bool remember)
 {
+    userSetDefult(users[usersNum]);
+
     users[usersNum].login = login;
-    users[usersNum++].password = password;
+    users[usersNum].password = password;
+    users[usersNum].remember = remember;
 
-    ofstream usersFile(tempCrypto + "usersBase.txt");
-    {
-        usersFile << login << endl;
-        usersFile << password << endl;
-
-    } usersFile.close();
+    usersNum++;
 
     return;
 }
@@ -324,7 +292,6 @@ void userBaseUpdate()
 
     return;
 }
-
 
 void saveSettings()
 {
@@ -413,7 +380,7 @@ void destroyFile(string fileName)
 void resetScore()
 {
     userSetDefult(user);
-    userSave(user);
+    usersSave();
 
     system("start C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\imgui-master\\examples\\example_win32_directx9\\Release\\example_win32_directx9.exe");
 
@@ -556,6 +523,7 @@ void refresh()
     return;
 }
 
+/*
 void takeProfit()
 {
     if (user.saldo > 100000)
@@ -573,7 +541,8 @@ void takeProfit()
 
     return;
 }
-
+*/
+/*
 void getPlace()
 {
     ifstream placeTxt(tempCrypto + "place.txt");
@@ -590,7 +559,7 @@ void getPlace()
 
     return;
 }
-
+*/
 void printMoney(double money)
 {
     if (money > 999)
@@ -696,18 +665,40 @@ int main(int, char**)
         }
     } tempCryptoCheck.close();
 
-    static bool loginWinShow;
-    static bool mainWinShow;
+    static bool loginWinShow = false;
+    static bool mainWinShow = false;
+    static bool is = false;
+    static int iii = 0;
 
     userSetDefult(user);
     usersLoad();
+    for (int i = 0; i < c_cryptoNum; i++)
+    {
+        if (users[i].remember == true) {
+            is = true;
+            iii = i;
+        }
+    }
     if (usersNum == 0)
     {
         mainWinShow = false;
         loginWinShow = true;
     }
+    else
+    {
+        mainWinShow = true;
 
-    getPlace(); // get refresh path
+        if (is == true)
+        {
+            user = users[iii];
+        }
+        else
+        {
+            loginWinShow = true;
+        }
+    }
+
+//    getPlace(); // get refresh path
 
     readCryptoBaseFile(); // other users will have other
 
@@ -741,7 +732,7 @@ int main(int, char**)
             ShowDemoWindow();
 #endif // _DEBUG
 
-            if (mainWinShow == false)
+            if (mainWinShow == true || user.login.length() > 0 && usersNum)
             {
                 Begin("Cryptocurrency analysis", NULL, window_flags);
                 {
@@ -1210,6 +1201,7 @@ int main(int, char**)
                         Text(("Password : " + user.password).c_str());
                         SameLine();
                         Button("Change password");
+                        Button("Logout");
                     }
                 }
 
@@ -1273,13 +1265,10 @@ int main(int, char**)
                             {
                                 user.login = loginTI;
                                 user.password = passwordTI;
-                                if (rememberMe == true) user.remember = true;
+                                user.remember = rememberMe;
 
                                 usersSave();
 
-                                
-                                
-                                //    addError(("User" + user.login).c_str());
                             }
                         }
 
@@ -1292,7 +1281,7 @@ int main(int, char**)
 
                     if (Button("Create new acc"))
                     {
-                        addUser(loginTI, passwordTI);
+                        addUser(loginTI, passwordTI, rememberMe);
 
                         for (int i = 0; i < 128; i++)
                         {
@@ -1368,7 +1357,7 @@ int main(int, char**)
                                 user.saldo -= atof(addAmount) * cryptoBase[dataAnalysisI].price;
                                 user.crypto.total[dataAnalysisI] += atof(addAmount) * cryptoBase[dataAnalysisI].price;
                                 user.crypto.owend[dataAnalysisI] += atof(addAmount) * 1.f;
-                                userSave(user);
+                                usersSave();
 
                              //   for (int i = 0; i < 128; i++) addAmount[i] = (char)0;
                             }
@@ -1396,7 +1385,7 @@ int main(int, char**)
                                 user.saldo += atof(sellAmount) * cryptoBase[dataAnalysisI].price;
                                 user.crypto.total[dataAnalysisI] -= atof(sellAmount) * cryptoBase[dataAnalysisI].price;
                                 user.crypto.owend[dataAnalysisI] -= atof(sellAmount) * 1.f;
-                                userSave(user);
+                                usersSave();
 
                                // for (int i = 0; i < 128; i++) sellAmount[i] = (char)0;
                             }
