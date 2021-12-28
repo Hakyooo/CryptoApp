@@ -116,11 +116,9 @@ namespace scraper
             }
 
             print("--------------------------");
-            //     print("gwenufiw " + gwenufiw());
             print("Test:  Bitcoin");
             print("Type:  " + getCryptoType("bitcoin"));
             print(getCryptoPrice("bitcoin"));
-            //     print("" + gwenufiw());
             print("--------------------------");
 
             if ((File.Exists(cryptoFile + "cryptocurrencyBase.txt") ? "File exists." : "File does not exist.") == "File exists.")

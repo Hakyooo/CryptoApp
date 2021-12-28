@@ -74,7 +74,7 @@ namespace CryptoApp_Launcher
             {
                 if ((File.Exists((cryptoAppPath + cppPath)) ? "File exists." : "File does not exist.") == "File exists.")
                 {
-                    system("start " + cryptoAppPath + cppPath); // Run imgui app
+                    system("start " + cryptoAppPath + cppPath); // Run cryoto app
                     System.IO.File.Copy((cryptoAppPath + cppPath), (cryptoAppPath + @"\cryptoApp.exe"), true); // Copy cpp imgui app to cryptoApp folder
                 }
                 console.Hide(); // Hide console
