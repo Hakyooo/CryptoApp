@@ -78,6 +78,8 @@ static bool ownedF = false; // chekcbox
 
 static int sortBy = NULL; // combobox currently selected item
 
+static bool rememberMe = false;
+
 static bool colorTool = true; // CollapsingHeader / progrmingMode
 
 static char cryptoAlertLevel[128]; // auto-fill
@@ -87,7 +89,12 @@ static int bestScore = 0;
 static bool cHashPath = false;
 static string dataScraperLoc = "";
 
-static char addAmount[128];
+static int usersNum = 0;
+static bool activeUser = false;
+
+const char c_cryptoNum = 200;
+
+static char buyAmount[128];
 static char sellAmount[128];
 
 static char* blockchains[] = { "Add Blockchain", "empty" };
@@ -99,6 +106,7 @@ static char addNewBlockchain[128];
 
 static bool alertLevel = true;
 
+static char currPassword[128];
 static char newPassword[128];
 static char confirmNewPassword[128];
 
@@ -191,26 +199,6 @@ struct userStruct
     }crypto;
 
 }user, users[999];
-static int usersNum = 0;
-static bool activeUser = false;
-
-const char c_cryptoNum = 20;
-const char c_usersNum = 10;
-
-void userSetDefult(userStruct user)
-{
-    user.login = "";
-    user.password = "";
-    user.remember = false;
-    user.saldo = 100000.f;
-    user.totalSaldo = 0.f;
-    user.score = 0.f;
-    user.bestScore = 0.f;
-    for (int i = 0; i < 999; i++)
-        user.crypto = { 0.f, 0.f };
-
-    return;
-}
 
 void usersSave()
 {
@@ -356,12 +344,24 @@ void updateSettings()
 
 void deleteCrypto(int i)
 {
-    for (int j = i; j < cryptoBaseSize; j++)
+    for (int j = cryptoBaseSize; i < j; j--)
     {
         cryptoBase[j - 1].symbol = cryptoBase[j].symbol;
         cryptoBase[j - 1].description = cryptoBase[j].description;
     }
+    /*
+       double price = NULL; // auto-fill
+       string typee = "auto-fill"; // auto fill
+       string prizeChange24h = "auto-fill"; //auto fill
+       bool isIncrese = NULL; // auto fill
+       string SearchResults = "auto-fill"; // auto fill
+    */
+    cryptoBase[cryptoBaseSize].description = "";
+    cryptoBase[cryptoBaseSize].symbol = "";
+    cryptoBase[cryptoBaseSize].Blockchain = NULL;
+    cryptoBase[cryptoBaseSize].alertLevel = { 0, 0 };
 
+    cryptoBaseSize--;
     return;
 }
 
@@ -380,7 +380,6 @@ void destroyFile(string fileName)
 
 void resetScore()
 {
-    userSetDefult(user);
     usersSave();
 
     system("start C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\imgui-master\\examples\\example_win32_directx9\\Release\\example_win32_directx9.exe");
@@ -579,7 +578,7 @@ void printMoney(double money)
     {
         Text((to_string((float)money) + " $").c_str());
     }
-    else Text((to_string((double)money) + " $").c_str());
+  //  else Text((to_string((double)money) + " $").c_str());
 
     if (IsItemHovered())
     {
@@ -612,7 +611,7 @@ void printAmmount(double ammount)
     {
         Text((to_string((int)(ammount / 1000.f)) + "k").c_str());
     }
-    else Text(to_string((double)ammount).c_str());
+//    else Text(to_string((double)ammount).c_str());
     
     if (IsItemHovered())
     {
@@ -632,7 +631,15 @@ void clearCharArray(char charArray[], int size)
         charArray[i] = (int)0;
     }
 }
+string charArrayToString(const char ch[], int size = 128)
+{
+    string output = "";
 
+    for (int i = 0; i < size; i++)
+        output += ch[i];
+    
+    return output;
+}
 int main(int, char**)
 {
 
@@ -751,6 +758,17 @@ int main(int, char**)
             if (msg.message == WM_QUIT) appRunning = false;
         }
 
+        /*
+
+            0.3 40% - > 0.12
+            0.4 40% - > 0.16
+            0.5 20% - > 0.1
+
+                     =  0.38
+        */
+
+
+
         ImGui_ImplDX9_NewFrame();
         ImGui_ImplWin32_NewFrame();
         NewFrame();
@@ -769,20 +787,16 @@ int main(int, char**)
                         {
                             Text(("User: " + user.login).c_str());
 
+                            /*
                             SameLine();
                             Text((" | Password: " + user.password).c_str());
-
+                            */
                             user.totalSaldo = user.saldo;
 
                             for (int i = 0; i < 999; i++)
                             {
                                 user.totalSaldo += user.crypto.owend[i] * cryptoBase[i].price;
                             }
-
-                            SameLine();
-                            Text("| Saldo:");
-                            SameLine();
-                            printMoney(user.saldo);
 
                             SameLine();
                             user.score = (int)(user.totalSaldo - 100000);
@@ -796,10 +810,16 @@ int main(int, char**)
                             SameLine();
                             Text(("| User: " + user.login).c_str());
                             */
-                            /*
+
                             SameLine();
-                            Text(("| Total saldo: " + to_string((int)(user.totalSaldo))).c_str());
-                            */
+                            Text("| Saldo:");
+                            SameLine();
+                            printMoney(user.saldo);
+
+                            SameLine();
+                            Text("| Total saldo:");
+                            SameLine();
+                            printMoney(user.totalSaldo);
                             /*
                             SameLine();
                             if (Button("Reset score")) resetScore();
@@ -842,30 +862,18 @@ int main(int, char**)
                     filter.Draw("<- Search", 200);
 
                     SameLine();
-                    if (Button("Refresh") || autoRefresh == true && nextRefresh < clock())
-                    {
-                        refresh();
-                    }
-                    if (showLastRerfresh == true)
-                    {
-                        SameLine();
-                        Text(("(Last refresh " + to_string((clock() - lastRefresh) / 1000) + "s)").c_str());
-                    }
-                    if (showAutoRerfresh == true)
-                    {
-                        autoRefreshText = (nextRefresh - clock()) / 1000 + 1;
-                        SameLine();
-                        Text(("(Auto refresh " + to_string(autoRefreshText) + "s)").c_str());
-                    }
-                    else nextRefresh = clock() + autoRefreshTime * 1000;
+                    PushItemWidth(120);
+                    Combo("<- Sort by", &sortBy, "Price% incresse\0Price% decresse\0\0");
 
                     SameLine();
                     Checkbox("Only owned", &ownedF);
 
                     SameLine();
-                    PushItemWidth(80);
-                    Combo("<- Sort by", &sortBy, "\0Price\0Change%24h\0total\0");
-
+                    if (Button("Refresh") || autoRefresh == true && nextRefresh < clock())
+                    {
+                        refresh();
+                    }
+                
                     if (BeginTable("table", 11, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(700, 175)))
                     {
                         TableSetupColumn("Symbol");
@@ -1139,148 +1147,188 @@ int main(int, char**)
 
                     EndTable();
 
-                if (CollapsingHeader("Settings", ImGuiTreeNodeFlags_None))
-                {
-                    ImGuiStyle& style = GetStyle();
-                    PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-                    PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 1.0f));
-                    ImVec2 scrolling_child_size = ImVec2(0, GetFrameHeightWithSpacing() * 7 + 30);
-                    BeginChild("scrolling", ImVec2(700, 100), true, ImGuiWindowFlags_HorizontalScrollbar);
+                    if (CollapsingHeader("Settings", ImGuiTreeNodeFlags_None))
                     {
-                        if (BeginTable("table/settings", 6, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(1500, 100)))
+                        ImGuiStyle& style = GetStyle();
+                        PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+                        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 1.0f));
+                        ImVec2 scrolling_child_size = ImVec2(0, GetFrameHeightWithSpacing() * 7 + 30);
+                        BeginChild("scrolling", ImVec2(700, 100), true, ImGuiWindowFlags_HorizontalScrollbar);
                         {
-                            TableSetupColumn("       Visual");
-                            TableSetupColumn("       Shortcuts");
-                            TableSetupColumn("       Preferences");
-                            TableSetupColumn("       Automation");
-                            TableSetupColumn("       Fix");
-                            TableHeadersRow();
-                        }
-
-                        TableNextRow(); // row
-                        {
-                            TableNextColumn(); // Visual
+                            if (BeginTable("table/settings", 6, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(1500, 100)))
                             {
-                                Checkbox("show last rerfresh", &showLastRerfresh);
-
-                                Checkbox("show auto-rerfresh", &showAutoRerfresh);
-
-                                Checkbox("Show fps", &showFps);
+                                TableSetupColumn("       Visual");
+                                TableSetupColumn("       Shortcuts");
+                                TableSetupColumn("       Preferences");
+                                TableSetupColumn("       Automation");
+                                TableSetupColumn("       Fix");
+                                TableHeadersRow();
                             }
-                            TableNextColumn(); // Shortcuts
+
+                            TableNextRow(); // row
                             {
-                                if (Button("Open Crpyto temp folder"))
+                                TableNextColumn(); // Visual
                                 {
-                                    system_command(("start " + tempCrypto).c_str());
+                                    Checkbox("show last rerfresh", &showLastRerfresh);
+
+                                    Checkbox("show auto-rerfresh", &showAutoRerfresh);
+
+                                    Checkbox("Show fps", &showFps);
                                 }
-                                if (Button("Open coinmarketcap.com"))
+                                TableNextColumn(); // Shortcuts
                                 {
-                                    system("start https://coinmarketcap.com/currencies/");
-                                }
-                                if (Button("Open Google finance"))
-                                {
-                                    system("start https://www.google.com/finance/");
-                                }
-                            }
-                            TableNextColumn(); // Preferences
-                            {
-                                Combo("Style color", &styleColor, "Dark\0Light\0Classic\0");
-
-                                Combo("Language", &language, "English\0...\0");
-
-                                Combo("Currency", &currency, "Dollar$\0Zloty\0");
-                            }
-                            TableNextColumn(); // Misc
-                            {
-                                Checkbox("Auto refresh", &autoRefresh);
-
-                                SameLine();
-                                PushItemWidth(80);
-
-                                if (autoRefresh == false)
-                                    BeginDisabled();
-
-                                SliderInt("sec", &autoRefreshTimeTmp, 5, 300);
-
-                                if (autoRefresh == false)
-                                    EndDisabled();
-
-
-                                if (autoRefresh == true)
-                                {
-                                    if (autoRefreshTimeTmp != autoRefreshTime)
+                                    if (Button("Open Crpyto temp folder"))
                                     {
-                                        nextRefresh = clock() + (autoRefreshTimeTmp * 1000);
+                                        system_command(("start " + tempCrypto).c_str());
                                     }
-                                    autoRefreshTime = autoRefreshTimeTmp;
+                                    if (Button("Open coinmarketcap.com"))
+                                    {
+                                        system("start https://coinmarketcap.com/currencies/");
+                                    }
+                                    if (Button("Open Google finance"))
+                                    {
+                                        system("start https://www.google.com/finance/");
+                                    }
                                 }
-                                else
+                                TableNextColumn(); // Preferences
                                 {
-                                    nextRefresh = clock() + autoRefreshTime * 1000;
+                                    Combo("Style color", &styleColor, "Dark\0Light\0Classic\0");
+
+                                    Combo("Language", &language, "English\0...\0");
+
+                                    Combo("Currency", &currency, "Dollar$\0Zloty\0");
                                 }
-
-                                if      (styleColor == 0) StyleColorsDark();
-                                else if (styleColor == 1) StyleColorsClassic();
-                                else if (styleColor == 2) StyleColorsLight();
-
-                                Text("Auto-save after delay");
-
-                                SameLine();
-
-                                autoSaveDelayTmp = autoSaveDelay;
-
-                                SliderInt("sec ", &autoSaveDelayTmp, 1, 100);
-
-                                if (autoSaveDelay != autoSaveDelayTmp)
+                                TableNextColumn(); // Misc
                                 {
-                                    autoSaveTime = clock() + (autoSaveDelay * 1000);
+                                    Checkbox("Auto refresh", &autoRefresh);
+
+                                    SameLine();
+                                    PushItemWidth(80);
+
+                                    if (autoRefresh == false)
+                                        BeginDisabled();
+
+                                    SliderInt("sec", &autoRefreshTimeTmp, 5, 300);
+
+                                    if (autoRefresh == false)
+                                        EndDisabled();
+
+
+                                    if (autoRefresh == true)
+                                    {
+                                        if (autoRefreshTimeTmp != autoRefreshTime)
+                                        {
+                                            nextRefresh = clock() + (autoRefreshTimeTmp * 1000);
+                                        }
+                                        autoRefreshTime = autoRefreshTimeTmp;
+                                    }
+                                    else
+                                    {
+                                        nextRefresh = clock() + autoRefreshTime * 1000;
+                                    }
+
+                                    if (styleColor == 0) StyleColorsDark();
+                                    else if (styleColor == 1) StyleColorsClassic();
+                                    else if (styleColor == 2) StyleColorsLight();
+
+                                    Text("Auto-save after delay");
+
+                                    SameLine();
+
+                                    autoSaveDelayTmp = autoSaveDelay;
+
+                                    SliderInt("sec ", &autoSaveDelayTmp, 1, 100);
+
+                                    if (autoSaveDelay != autoSaveDelayTmp)
+                                    {
+                                        autoSaveTime = clock() + (autoSaveDelay * 1000);
+                                    }
+                                    autoSaveDelay = autoSaveDelayTmp;
                                 }
-                                autoSaveDelay = autoSaveDelayTmp;
+                                TableNextColumn();
+                                {
+                                    if (Button("fix refresh btn"))
+                                    {
+                                        destroyFile("place.txt");
+                                        system_command(("start " + dataScraperLoc).c_str());
+                                    }
+                                }
                             }
-                            TableNextColumn();
-                            {
-                                if (Button("fix refresh btn"))
-                                {
-                                    destroyFile("place.txt");
-                                    system_command(("start " + dataScraperLoc).c_str());
-                                }
-                            }
+                            EndTable();
                         }
-                        EndTable();
+                        EndChild();
+                        PopStyleVar(2);
+                        Spacing();
                     }
-                    EndChild();
-                    PopStyleVar(2);
-                    Spacing();
-                }
 
-#ifdef _DEBUG
-                if (CollapsingHeader("Debug", ImGuiTreeNodeFlags_None))
-                {   //  to_string()
-                //  Text((to_string()).c_str());
-                    Text(("users: " + to_string(usersNum)).c_str());
-                    for (int i = 0; i < usersNum; i++)
+                    if (showFps == true)
+                        Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / GetIO().Framerate, GetIO().Framerate);
+
+                    if (showLastRerfresh == true)
                     {
-                        Text(("Login: " + users[i].login).c_str());
                         SameLine();
-                        Text(("| Password: " + users[i].password).c_str());
-                        SameLine();
-                        Text(("| Remember: " + to_string(users[i].remember)).c_str());
-                        SameLine();
-                        Text(("| Saldo: " + to_string(users[i].saldo)).c_str());
+                        Text(("(Last refresh " + to_string((clock() - lastRefresh) / 1000) + "s)").c_str());
                     }
+                    if (showAutoRerfresh == true)
+                    {
+                        autoRefreshText = (nextRefresh - clock()) / 1000 + 1;
+                        SameLine();
+                        Text(("(Auto refresh " + to_string(autoRefreshText) + "s)").c_str());
+                    }
+                    else nextRefresh = clock() + autoRefreshTime * 1000;
 
-                    static ImVec4 color_hsv(0.23f, 1.0f, 1.0f, 1.0f); // Stored as HSV!
-
-                    ColorEdit4("HSV shown as HSV##1", (float*)&color_hsv, ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
-                }       
-#endif // _DEBUG
-
-                if (showFps == true)
-                    Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / GetIO().Framerate, GetIO().Framerate);
                 }
                 End();
             }
 
+#ifdef _DEBUG
+            Begin("Debug", NULL, window_flags);
+            {
+                //  to_string()
+            //  Text((to_string()).c_str());
+             //   Text(("users: " + to_string(usersNum)).c_str());
+                if (BeginTable("table", 4, ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoHostExtendX, ImVec2(700, 175)))
+                {
+                    TableSetupColumn("Login");
+                    TableSetupColumn("Password");
+                    TableSetupColumn("Remember me");
+                    TableSetupColumn("Saldo");
+
+                    TableHeadersRow();
+                }
+               
+                for (int i = 0; i < usersNum; i++)
+                {
+                    TableNextRow();
+                    {
+                        TableNextColumn(); // login
+                        {
+                            Text((users[i].login).c_str());
+                        }
+                        TableNextColumn(); // password
+                        {
+                            Text((users[i].password).c_str());
+                        }
+                        TableNextColumn(); // remember
+                        {
+                            if (users[i].remember == true) Text("Yes");
+                            else if (users[i].remember == false) Text("No");
+                        }
+                        TableNextColumn(); // saldo
+                        {
+                            printMoney(users[i].saldo);
+                        }
+                    }
+                }
+                EndTable();
+
+                static ImVec4 color_hsv(0.23f, 1.0f, 1.0f, 1.0f); // Stored as HSV!
+
+                ColorEdit4("HSV shown as HSV##1", (float*)&color_hsv, ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
+                
+            }
+            End();
+#endif // _DEBUG
             if (loginWinShow == true)
             {
                 Begin("Login win", NULL, window_flags);
@@ -1291,16 +1339,12 @@ int main(int, char**)
                     PushItemWidth(100);
                     InputText("password", passwordTI, IM_ARRAYSIZE(passwordTI), ImGuiInputTextFlags_Password);
 
-                    static bool rememberMe = false;
-
                     Checkbox("Remember me", &rememberMe);
 
                     SameLine();
 
                     if (Button("> Login"))
                     {
-                        cout << usersNum << endl;
-
                         if (usersNum > 0) mainWinShow == true;
 
                         for (int i = 0; i <= usersNum; i++)
@@ -1309,7 +1353,10 @@ int main(int, char**)
                             {
                                 user.login = loginTI;
                                 user.password = passwordTI;
+
                                 user.remember = rememberMe;
+                                users[i].remember = rememberMe;
+
                                 for (int j = 0; j <= usersNum; j++)
                                 {
                                     if (users[j].remember == true && i != j)
@@ -1335,11 +1382,36 @@ int main(int, char**)
                     {
                         addUser(loginTI, passwordTI, rememberMe);
 
-                        for (int i = 0; i < 128; i++)
+                        if (usersNum > 0) mainWinShow == true;
+
+                        for (int i = 0; i <= usersNum; i++)
                         {
-                            loginTI[i] = (char)0;
-                            passwordTI[i] = (char)0;
+                            if (users[i].login == loginTI && users[i].password == passwordTI)
+                            {
+                                user.login = loginTI;
+                                user.password = passwordTI;
+
+                                user.remember = rememberMe;
+                                users[i].remember = rememberMe;
+
+                                for (int j = 0; j <= usersNum; j++)
+                                {
+                                    if (users[j].remember == true && i != j)
+                                    {
+                                        users[j].remember = false;
+                                    }
+                                }
+                                user.saldo = users[i].saldo;
+
+                                usersSave();
+
+                                currentUser = i;
+                                loginWinShow = false;
+                            }
                         }
+
+                        clearCharArray(loginTI, 128);
+                        clearCharArray(passwordTI, 128);
                     }
                 }
                 End();
@@ -1350,17 +1422,44 @@ int main(int, char**)
                 Begin("Change password ", NULL, window_flags);
                 {
                     PushItemWidth(80);
-                    InputText("new password", newPassword,IM_ARRAYSIZE(newPassword));
+                    InputText("Current password", currPassword, 128);
                     PushItemWidth(80);
-                    InputText("confirm new password", confirmNewPassword,IM_ARRAYSIZE(confirmNewPassword));
+                    InputText("New password", newPassword, 128);
+                    PushItemWidth(80);
+                    InputText("Confirm new password", confirmNewPassword, 128);
 
                     if (Button("Save"))
                     {
-                        user.password = newPassword;
-                        users[currentUser].password = newPassword;
-                        changePasswordWin = false;
-                        clearCharArray(newPassword, 128);
-                        clearCharArray(confirmNewPassword, 128);
+                        if (currPassword == user.password)
+                        {
+                            static bool passwordsSame = true;
+
+                            for (int i = 0; i < max(charArrayToString(newPassword).length(), charArrayToString(confirmNewPassword).length()); i++)
+                            {
+                                if (newPassword[i] == confirmNewPassword[i])
+                                {
+
+                                }
+                                else // diffrent arrars
+                                {
+                                    addError("Saving password failed passwords are diffrent.");
+
+                                    passwordsSame = false;
+
+                                    break;
+                                }
+                            }
+                            if (passwordsSame == true)
+                            {
+                                user.password = newPassword;
+                                users[currentUser].password = newPassword;
+                                changePasswordWin = false;
+                                clearCharArray(newPassword, 128);
+                                clearCharArray(confirmNewPassword, 128);
+                                clearCharArray(currPassword, 128);
+                            }
+                        }
+                        else addError("Currently password mismatch.");
                         /*
                         for (int i = 0; i < (max(newPassword.lenght(), confirmNewPassword.lenght())); i++)
                         {
@@ -1439,27 +1538,27 @@ int main(int, char**)
                         SameLine();
                         if (Button("Buy "))
                         {
-                            if (atof(addAmount) * cryptoBase[dataAnalysisI].price < user.saldo + 0.01)
+                            if (atof(buyAmount) * cryptoBase[dataAnalysisI].price < user.saldo + 0.01)
                             {
-                                user.saldo -= atof(addAmount) * cryptoBase[dataAnalysisI].price;
-                                user.crypto.total[dataAnalysisI] += atof(addAmount) * cryptoBase[dataAnalysisI].price;
-                                user.crypto.owend[dataAnalysisI] += atof(addAmount) * 1.f;
+                                user.saldo -= atof(buyAmount) * cryptoBase[dataAnalysisI].price;
+                                user.crypto.total[dataAnalysisI] += atof(buyAmount) * cryptoBase[dataAnalysisI].price;
+                                user.crypto.owend[dataAnalysisI] += atof(buyAmount) * 1.f;
                                 usersSave();
 
-                             //   for (int i = 0; i < 128; i++) addAmount[i] = (char)0;
+                             //   for (int i = 0; i < 128; i++) buyAmount[i] = (char)0;
                             }
                             else addError("You dont own that much credits");
                         }
                         SameLine();
                         PushItemWidth(60);
-                        InputText("or", addAmount, 64, ImGuiInputTextFlags_CharsDecimal);
+                        InputText("or", buyAmount, 64, ImGuiInputTextFlags_CharsDecimal);
 
                         SameLine();
                         if (Button("All"))
                         {
                             for (int i = 0; i < to_string(user.saldo / cryptoBase[dataAnalysisI].price).length(); i++)
                             {
-                                addAmount[i] = (char)to_string(user.saldo / cryptoBase[dataAnalysisI].price)[i];
+                                buyAmount[i] = (char)to_string(user.saldo / cryptoBase[dataAnalysisI].price)[i];
                             }
                         }
 
@@ -1471,6 +1570,7 @@ int main(int, char**)
                             {
                                 user.saldo += atof(sellAmount) * cryptoBase[dataAnalysisI].price;
                                 user.crypto.total[dataAnalysisI] -= atof(sellAmount) * cryptoBase[dataAnalysisI].price;
+
                                 user.crypto.owend[dataAnalysisI] -= atof(sellAmount) * 1.f;
                                 usersSave();
 
