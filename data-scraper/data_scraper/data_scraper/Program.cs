@@ -82,21 +82,14 @@ namespace scraper
             string tmpFile = System.IO.Path.GetTempPath();
             string cryptoFile = tmpFile + "Crypto\\";
 
-            if ((File.Exists(cryptoFile + "cHaszScraper") ? "File exists." : "File does not exist.") == "File does not exist.")
-            {
+            if ((File.Exists(cryptoFile + "data_scraper.exe") ? "File exists." : "File does not exist.") == "File exists.")
+                if (Path.GetFullPath("data_scraper.exe") != (cryptoFile + "data_scraper.exe"))
+                    File.Delete((cryptoFile + "data_scraper.exe"));
+            
+            if (Path.GetFullPath("data_scraper.exe") != (cryptoFile + "data_scraper.exe"))
                 System.IO.File.Copy((Path.GetFullPath("data_scraper.exe")), (cryptoFile + "data_scraper.exe"), true);
-            }
-            else
-            {
-
-            }
-
-
-            if ((File.Exists(cryptoFile + "place.txt") ? "File exists." : "File does not exist.") == "File exists.")
-            {
-
-            }
-            else
+            
+            if ((File.Exists(cryptoFile + "place.txt") ? "File exists." : "File does not exist.") == "File does not exist.")
             { 
                 StreamWriter placeTxtLoc = new StreamWriter(cryptoFile + "place.txt");
                 string fullPath = Path.GetFullPath("data_scraper.exe");
@@ -133,7 +126,6 @@ namespace scraper
                             if (turnFor == 0) turnFor = 1;
                             else if (turnFor == 1)
                             {
-
                                 string cryptoType = getCryptoType(desc);
                                 string cryptoPrice = getCryptoPrice(desc);
 
@@ -145,11 +137,9 @@ namespace scraper
                             }
                         }
                     } while (!readData.EndOfStream);
-
-                    scapedData.Close();
-                    readData.Close();
-                    Thread.Sleep(1000);
                 }
+                readData.Close();
+                scapedData.Close();
             }
         }
     }

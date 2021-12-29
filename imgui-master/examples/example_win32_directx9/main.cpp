@@ -92,7 +92,7 @@ static string dataScraperLoc = "";
 static int usersNum = 0;
 static bool activeUser = false;
 
-const char c_cryptoNum = 200;
+const int c_cryptoNum = 200;
 
 static char buyAmount[128];
 static char sellAmount[128];
@@ -216,7 +216,7 @@ void usersSave()
             userCrypto << users[j].password << endl;
             userCrypto << users[j].remember << endl;
 
-            for (int i = 0; i < c_cryptoNum; i++)
+            for (int i = 0; i < 999; i++)
             {
                 userCrypto << users[j].crypto.total[i] << endl;
                 userCrypto << users[j].crypto.owend[i] << endl;
@@ -349,7 +349,7 @@ void deleteCrypto(int i)
         cryptoBase[j - 1].symbol = cryptoBase[j].symbol;
         cryptoBase[j - 1].description = cryptoBase[j].description;
     }
-    /*
+    /*z
        double price = NULL; // auto-fill
        string typee = "auto-fill"; // auto fill
        string prizeChange24h = "auto-fill"; //auto fill
@@ -382,7 +382,7 @@ void resetScore()
 {
     usersSave();
 
-    system("start C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\imgui-master\\examples\\example_win32_directx9\\Release\\example_win32_directx9.exe");
+   // system("start C:\\Users\\moolm\\OneDrive\\Documents\\GitHub\\CryptoApp\\imgui-master\\examples\\example_win32_directx9\\Release\\example_win32_directx9.exe");
 
     return exit(0);
 }
@@ -391,10 +391,6 @@ void readScrapedBase()
 {
     ifstream cryptoScrapedBase(tempCrypto + "cryptocurrencyScrapedBase.txt");
     {
-        /*
-            BTC Coin Price: zł199,446.66 5.37%+
-            BTC Coin Price: $49,014.51 4.81%+
-        */
         if (!cryptoScrapedBase.fail())
         {
             static char ch = '0';
